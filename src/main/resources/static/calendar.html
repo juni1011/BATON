@@ -3,63 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>캘린더 | 청년 지원사업 도우미</title>
+    <title>캘린더 | 알바 첫걸음</title>
     <link rel="stylesheet" href="/css/common.css">
+    <link rel="icon" href="/images/logo-b2-mark.svg" type="image/svg+xml">
+    <meta name="theme-color" content="#9B3F3F">
     <script src="/js/common.js" defer></script>
     <script src="/js/ui.js" defer></script>
     <script src="/js/calendar.js" defer></script>
 </head>
-<body>
-    <header><nav aria-label="공통 메뉴">
-        <a href="/index.html">홈</a>
+<body class="portal calendar-page">
+    <header class="site-header"><nav aria-label="공통 메뉴">
+        <a class="site-name" href="/index.html" aria-label="알바 첫걸음 홈"><img class="site-logo" src="/images/logo-b2.svg" alt="알바 첫걸음" width="220" height="48"></a>
+        <a href="/upload.html">계약서 점검</a>
         <a href="/support.html">지원사업 추천</a>
         <a href="/calendar.html">캘린더</a>
+        <a href="/signin.html">로그인</a>
     </nav></header>
     <main>
-        <div class="row between">
+        <section class="calendar-intro">
             <div>
                 <h1>캘린더</h1>
-                <p class="lead">지원사업 신청 마감일과 내가 추가한 일정을 한눈에 봅니다.</p>
+                <p class="lead">근무일, 급여일, 지원사업 마감일과 내 일정을 확인하세요.</p>
             </div>
-        </div>
-        <div id="message" class="notice" role="alert" hidden></div>
-        <section class="card">
-            <div class="row between">
-                <div class="row">
-                    <button type="button" class="btn small" id="prev" aria-label="이전 달">‹</button>
-                    <h2 id="month-title" style="margin:0;min-width:120px;text-align:center" aria-live="polite"></h2>
-                    <button type="button" class="btn small" id="next" aria-label="다음 달">›</button>
-                    <button type="button" class="btn small" id="today">오늘</button>
-                </div>
-                <div class="checks" id="filters" role="group" aria-label="표시할 일정 종류"></div>
-            </div>
-            <div class="cal-head" aria-hidden="true"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
-            <div class="cal-grid" id="grid"></div>
+            <a class="btn primary" id="new-event" href="#add-form">일정 추가</a>
         </section>
-        <div class="grid">
-            <section class="card" aria-labelledby="day-title">
-                <h2 id="day-title"></h2>
-                <div id="day-events"></div>
-            </section>
-            <section class="card" aria-labelledby="add-title">
-                <h2 id="add-title">일정 추가</h2>
-                <form id="add-form" class="stack">
-                    <div><label for="title">제목</label><input id="title" type="text" required maxlength="60"></div>
-                    <div class="form-grid">
-                        <div><label for="date">날짜</label><input id="date" type="date" required></div>
-                        <div>
-                            <label for="type">종류</label>
-                            <select id="type"><option value="CUSTOM">내 일정</option><option value="TODO">할 일</option></select>
-                        </div>
-                        <div><label for="startTime">시작 (선택)</label><input id="startTime" type="time"></div>
-                        <div><label for="endTime">종료 (선택)</label><input id="endTime" type="time"></div>
+        <div class="calendar-layout">
+            <section class="card calendar-month" aria-label="월간 캘린더">
+                <div class="row between">
+                    <div class="row">
+                        <button type="button" class="btn small" id="prev" aria-label="이전 달">‹</button>
+                        <h2 id="month-title" aria-live="polite"></h2>
+                        <button type="button" class="btn small" id="next" aria-label="다음 달">›</button>
+                        <button type="button" class="btn small" id="today">오늘</button>
                     </div>
-                    <div><label for="description">메모 (선택)</label><input id="description" type="text" maxlength="200"></div>
-                    <div class="row end"><button type="submit" class="btn primary">추가</button></div>
-                </form>
+                    <div class="checks" id="filters" role="group" aria-label="표시할 일정 종류"></div>
+                </div>
+                <div class="cal-head" aria-hidden="true"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
+                <div class="cal-grid" id="grid"></div>
             </section>
+            <div class="calendar-sidebar">
+                <section class="card" aria-labelledby="day-title">
+                    <h2 id="day-title"></h2>
+                    <div id="day-events"></div>
+                </section>
+                <section class="card" aria-labelledby="add-title">
+                    <h2 id="add-title">개인 일정 추가</h2>
+                    <form id="add-form" class="stack">
+                        <div><label for="title">제목</label><input id="title" type="text" required maxlength="60"></div>
+                        <div class="form-grid">
+                            <div><label for="date">날짜</label><input id="date" type="date" required></div>
+                            <div>
+                                <label for="type">종류</label>
+                                <select id="type"><option value="CUSTOM">내 일정</option><option value="TODO">할 일</option></select>
+                            </div>
+                            <div><label for="startTime">시작 (선택)</label><input id="startTime" type="time"></div>
+                            <div><label for="endTime">종료 (선택)</label><input id="endTime" type="time"></div>
+                        </div>
+                        <div><label for="description">메모 (선택)</label><input id="description" type="text" maxlength="200"></div>
+                        <div id="message" class="notice" role="status" hidden></div>
+                        <div class="row end"><button type="submit" class="btn primary">일정 저장</button></div>
+                    </form>
+                </section>
+            </div>
         </div>
     </main>
-    <footer>본 서비스는 정보 제공용이며 지원사업 목록은 가상 예시입니다</footer>
+    <footer>Made by RE: 지원 Corporation</footer>
 </body>
 </html>

@@ -3,36 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>홈 | 청년 지원사업 도우미</title>
+    <title>홈 | 알바 첫걸음</title>
     <link rel="stylesheet" href="/css/common.css">
+    <link rel="icon" href="/images/logo-b2-mark.svg" type="image/svg+xml">
+    <meta name="theme-color" content="#9B3F3F">
     <script src="/js/common.js" defer></script>
     <script src="/js/ui.js" defer></script>
     <script src="/js/index.js" defer></script>
 </head>
-<body>
-    <header><nav aria-label="공통 메뉴">
-        <a href="/index.html">홈</a>
+<body class="portal home-page">
+    <header class="site-header"><nav aria-label="공통 메뉴">
+        <a class="site-name" href="/index.html" aria-label="알바 첫걸음 홈"><img class="site-logo" src="/images/logo-b2.svg" alt="알바 첫걸음" width="220" height="48"></a>
+        <a href="/upload.html">계약서 점검</a>
         <a href="/support.html">지원사업 추천</a>
         <a href="/calendar.html">캘린더</a>
+        <a href="/signin.html">로그인</a>
     </nav></header>
-    <main>
-        <section class="hero">
-            <h1>청년 지원사업 도우미</h1>
-            <p>내 정보를 입력하면 조건에 맞는 지원사업을 찾아 주고, 신청 마감일과 내 일정을 캘린더로 정리해 드립니다.</p>
+    <main id="main">
+        <section class="intro">
+            <h1>알바 첫걸음</h1>
+            <p>첫 알바 계약서의 근로조건을 확인하고, 급여일과 신청 마감일을 한곳에서 관리하세요.</p>
             <div class="row">
-                <a class="btn" href="/support.html">지원사업 추천 받기</a>
-                <a class="btn ghost" href="/calendar.html">캘린더 보기</a>
+                <a class="btn primary" href="/upload.html">계약서 점검 시작</a>
+                <a class="btn" href="/calendar.html">내 일정 보기</a>
             </div>
         </section>
-        <h2>진행 순서</h2>
-        <ol class="steps" id="steps"></ol>
-        <div class="grid">
+        <nav class="journey" aria-label="이용 단계">
+            <ol>
+                <li><a href="/upload.html">계약서 입력·확인</a></li>
+                <li><a href="/report.html">점검 리포트</a></li>
+                <li><a href="/support.html">지원사업 추천</a></li>
+                <li><a href="/calendar.html">일정 관리</a></li>
+            </ol>
+        </nav>
+        <div class="home-overview">
             <section class="card" aria-labelledby="summary-title">
-                <h2 id="summary-title">추천 결과</h2>
+                <div class="section-heading"><h2 id="summary-title">내 추천 결과</h2><a href="/support.html">전체 보기</a></div>
                 <div id="summary"></div>
             </section>
             <section class="card" aria-labelledby="upcoming-title">
-                <h2 id="upcoming-title">다가오는 일정</h2>
+                <div class="section-heading"><h2 id="upcoming-title">다가오는 일정</h2><a href="/calendar.html">캘린더</a></div>
                 <div id="upcoming"></div>
             </section>
         </div>
@@ -41,6 +51,6 @@
             <button type="button" class="btn danger small" id="reset">저장된 내 정보 모두 지우기</button>
         </div>
     </main>
-    <footer>본 서비스는 정보 제공용이며 지원사업 목록은 가상 예시입니다</footer>
+    <footer>Made by RE: 지원 Corporation</footer>
 </body>
 </html>

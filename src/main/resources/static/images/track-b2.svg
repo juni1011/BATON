@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 380" fill="none">
+  <rect width="1200" height="380" fill="#9B3F3F"/>
+  <g stroke="#FFFCF4" stroke-width="2" opacity=".6">
+    <path d="M1240 24H784C520 24 520 356 784 356H1240"/>
+    <path d="M1240 55H784C562 55 562 325 784 325H1240"/>
+    <path d="M1240 86H784C604 86 604 294 784 294H1240"/>
+    <path d="M1240 117H784C646 117 646 263 784 263H1240"/>
+  </g>
+  <path d="M1000 54 946 326" stroke="#C69A33" stroke-width="8"/>
+  <g fill="#FFFCF4" font-family="system-ui,sans-serif" text-anchor="middle">
+    <text x="1090" y="202" font-size="62" font-weight="300">01</text>
+    <text x="1090" y="229" font-size="12" letter-spacing="5">START</text>
+  </g>
+</svg>
