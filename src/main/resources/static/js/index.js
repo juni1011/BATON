@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const next = events.filter(event => event.date && event.date >= today)
         .sort((a, b) => (a.date + (a.startTime || "")).localeCompare(b.date + (b.startTime || ""))).slice(0, 5);
     if (!next.length) {
-        upcoming.append(h("p", { class: "muted", text: events.length ? "예정된 일정이 없습니다." : "추천 결과에서 마감일을 추가하면 여기에 표시됩니다." }));
+        upcoming.append(h("p", { class: "muted", text: events.length ? "예정된 일정이 없습니다." : "계약서를 점검하거나 마감일·개인 일정을 추가하면 여기에 표시됩니다." }));
     } else {
         upcoming.append(...next.map(event => h("div", { class: "event" },
             h("span", { class: "badge " + event.type, text: EVENT_LABELS[event.type] }),
