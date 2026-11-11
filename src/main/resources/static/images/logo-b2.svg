@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="230" height="48" viewBox="0 0 230 48" role="img" aria-labelledby="b2-logo-title">
+  <title id="b2-logo-title">알바 첫걸음</title>
+  <g transform="translate(0 1) scale(.177)">
+    <g fill="#C69A33">
+      <path d="M 0 236 C 35 178 65 152 121 152 H 157 L 146 171 H 121 C 84 171 61 184 37 218 H 76 L 64 236 Z"/>
+      <path d="M 35 205 C 45 191 58 185 74 185 H 140 L 129 200 H 106 L 97 210 H 32 Z"/>
+      <path d="M 94 209 H 132 L 119 233 H 79 Z"/>
+    </g>
+    <g fill="#9B3F3F">
+      <path d="M 79 238 H 171 C 178 238 180 234 182 226 L 185 220 H 313 L 340 253 H 68 Z"/>
+      <path d="M 196 42 C 202 36 211 36 219 38 L 273 48 C 284 50 290 56 298 68 H 397 C 405 68 409 72 405 80 L 393 100 C 390 106 386 108 379 108 H 284 L 278 115 L 366 171 C 375 177 380 179 390 181 L 414 187 C 424 189 425 194 419 202 L 382 250 C 376 258 366 259 358 251 L 252 145 L 196 178 L 165 221 L 169 228 C 172 232 170 235 166 235 H 135 C 130 235 129 232 132 227 L 172 161 C 174 157 178 154 182 150 L 217 119 C 223 114 227 107 231 99 L 241 78 L 210 70 L 180 99 C 174 106 164 105 159 99 C 153 94 154 86 160 80 Z"/>
+      <circle cx="308" cy="29" r="28"/>
+    </g>
+  </g>
+  <text x="84" y="34" fill="#9B3F3F" font-family="Apple SD Gothic Neo, Malgun Gothic, Noto Sans KR, system-ui, sans-serif" font-size="27" font-weight="800" letter-spacing="-1">알바 첫걸음</text>
+</svg>

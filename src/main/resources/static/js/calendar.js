@@ -18,6 +18,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if (sortedDates.length && !sortedDates.some(date => date.slice(0, 7) === today.slice(0, 7))) {
         selected = sortedDates.find(date => date >= today) || sortedDates[0];
     }
+    const linkedDate = new URLSearchParams(location.search).get("date");
+    if (linkedDate && /^[1-9]\d{3}-\d{2}-\d{2}$/.test(linkedDate)) {
+        const date = new Date(linkedDate + "T00:00:00Z");
+        if (Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === linkedDate) {
+            selected = linkedDate;
+        }
+    }
     let year = Number(selected.slice(0, 4));
     let month = Number(selected.slice(5, 7));
 
@@ -51,7 +58,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 class: "day" + (date === today ? " today" : "") + (date === selected ? " selected" : ""),
                 "aria-label": `${month}월 ${day}일, 일정 ${list.length}건`,
                 "aria-pressed": String(date === selected),
-                onclick: () => { selected = date; renderGrid(); renderDay(); }
+                onclick: () => {
+                    selected = date;
+                    renderGrid();
+                    renderDay();
+                    grid.querySelector(".day.selected").focus();
+                }
             },
                 h("span", { class: "date", text: String(day) }),
                 list.slice(0, 3).map(event => h("span", { class: "chip " + event.type, text: event.title })),
@@ -111,13 +123,27 @@ document.addEventListener("DOMContentLoaded", () => {
         renderDay();
     });
 
+    field("new-event").addEventListener("click", event => {
+        event.preventDefault();
+        field("title").focus();
+    });
+
     addForm.addEventListener("submit", event => {
         event.preventDefault();
         const title = field("title").value.trim();
         const date = field("date").value;
-        if (!title || !date) return;
+        if (!title) {
+            notify(message, "일정 제목을 입력해 주세요.", "error");
+            field("title").focus();
+            return;
+        }
         const start = field("startTime").value || null;
         const end = field("endTime").value || null;
+        if (end && !start) {
+            notify(message, "종료 시각을 입력하려면 시작 시각도 선택해 주세요.", "error");
+            field("startTime").focus();
+            return;
+        }
         if (start && end && end <= start) {
             notify(message, "종료 시각은 시작 시각보다 늦어야 합니다.", "error");
             return;
@@ -128,7 +154,8 @@ document.addEventListener("DOMContentLoaded", () => {
             description: field("description").value.trim() || null, sourceLink: "/calendar.html"
         });
         Easyton.saveCalendarEvents(events);
-        notify(message, "");
+        notify(message, "일정을 저장했어요.");
+        hidden.delete(field("type").value);
         selected = date;
         year = Number(date.slice(0, 4));
         month = Number(date.slice(5, 7));
@@ -136,8 +163,5 @@ document.addEventListener("DOMContentLoaded", () => {
         renderAll();
     });
 
-    if (!events.length) {
-        notify(message, "아직 일정이 없습니다. 아래에서 직접 추가하거나 지원사업 추천 결과에서 마감일을 추가해 보세요.");
-    }
     renderAll();
 });
