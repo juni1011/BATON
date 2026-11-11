@@ -6,6 +6,8 @@
     <title>캘린더 | 알바 계약 도우미</title>
     <link rel="stylesheet" href="/css/common.css">
     <script src="/js/common.js" defer></script>
+    <script src="/js/ui.js" defer></script>
+    <script src="/js/calendar.js" defer></script>
 </head>
 <body>
     <header><nav aria-label="공통 메뉴">
@@ -17,8 +19,50 @@
         <a href="/calendar.html">캘린더</a>
     </nav></header>
     <main>
-        <h1>캘린더</h1>
-        <p>담당: D, 여기에 구현</p>
+        <div class="row between">
+            <div>
+                <h1>캘린더</h1>
+                <p class="lead">근무일, 급여일, 계약 종료일과 내가 추가한 일정을 한눈에 봅니다.</p>
+            </div>
+            <button type="button" class="btn" id="regenerate" hidden>계약 일정 다시 만들기</button>
+        </div>
+        <div id="message" class="notice" role="alert" hidden></div>
+        <section class="card">
+            <div class="row between">
+                <div class="row">
+                    <button type="button" class="btn small" id="prev" aria-label="이전 달">‹</button>
+                    <h2 id="month-title" style="margin:0;min-width:120px;text-align:center" aria-live="polite"></h2>
+                    <button type="button" class="btn small" id="next" aria-label="다음 달">›</button>
+                    <button type="button" class="btn small" id="today">오늘</button>
+                </div>
+                <div class="checks" id="filters" role="group" aria-label="표시할 일정 종류"></div>
+            </div>
+            <div class="cal-head" aria-hidden="true"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
+            <div class="cal-grid" id="grid"></div>
+        </section>
+        <div class="grid">
+            <section class="card" aria-labelledby="day-title">
+                <h2 id="day-title"></h2>
+                <div id="day-events"></div>
+            </section>
+            <section class="card" aria-labelledby="add-title">
+                <h2 id="add-title">일정 추가</h2>
+                <form id="add-form" class="stack">
+                    <div><label for="title">제목</label><input id="title" type="text" required maxlength="60"></div>
+                    <div class="form-grid">
+                        <div><label for="date">날짜</label><input id="date" type="date" required></div>
+                        <div>
+                            <label for="type">종류</label>
+                            <select id="type"><option value="CUSTOM">내 일정</option><option value="TODO">할 일</option></select>
+                        </div>
+                        <div><label for="startTime">시작 (선택)</label><input id="startTime" type="time"></div>
+                        <div><label for="endTime">종료 (선택)</label><input id="endTime" type="time"></div>
+                    </div>
+                    <div><label for="description">메모 (선택)</label><input id="description" type="text" maxlength="200"></div>
+                    <div class="row end"><button type="submit" class="btn primary">추가</button></div>
+                </form>
+            </section>
+        </div>
     </main>
     <footer>본 서비스는 정보 제공용이며 법률 자문이 아닙니다</footer>
 </body>

@@ -6,6 +6,8 @@
     <title>점검 리포트 | 알바 계약 도우미</title>
     <link rel="stylesheet" href="/css/common.css">
     <script src="/js/common.js" defer></script>
+    <script src="/js/ui.js" defer></script>
+    <script src="/js/report.js" defer></script>
 </head>
 <body>
     <header><nav aria-label="공통 메뉴">
@@ -17,8 +19,34 @@
         <a href="/calendar.html">캘린더</a>
     </nav></header>
     <main>
-        <h1>점검 리포트</h1>
-        <p>담당: B, 여기에 구현</p>
+        <div class="row between">
+            <div>
+                <h1>점검 리포트</h1>
+                <p class="lead" id="subtitle">계약서에서 확인이 필요한 부분을 정리했습니다.</p>
+            </div>
+            <div class="row" id="actions" hidden>
+                <button type="button" class="btn" id="copy">질문 모아 복사</button>
+                <a class="btn" href="/confirm.html">값 수정</a>
+            </div>
+        </div>
+        <div id="message" class="notice" role="alert" hidden></div>
+        <section id="empty" class="card empty" hidden>
+            <p>아직 점검한 계약서가 없습니다.</p>
+            <a class="btn primary" href="/upload.html">계약서 업로드하기</a>
+        </section>
+        <div id="report" hidden>
+            <div class="stats" id="stats"></div>
+            <p class="muted small" id="pay-note"></p>
+            <div id="items"></div>
+            <div class="card">
+                <h2>다음 단계</h2>
+                <div class="row">
+                    <a class="btn primary" href="/calendar.html">근무·급여 일정 보기</a>
+                    <a class="btn" href="/support.html">지원사업 추천 받기</a>
+                </div>
+            </div>
+            <p class="muted small">점검 결과는 입력된 값과 정해진 규칙으로 계산한 참고 정보입니다. 정확한 판단은 고용노동부 상담(국번 없이 1350) 등 전문 기관에 확인하세요.</p>
+        </div>
     </main>
     <footer>본 서비스는 정보 제공용이며 법률 자문이 아닙니다</footer>
 </body>
