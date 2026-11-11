@@ -48,7 +48,7 @@ public class SupportMatcher {
         UserProfile profile = request == null ? null : request.profile();
         List<SupportMatch> matches = new ArrayList<>();
         for (Program program : PROGRAMS) matches.add(evaluate(program, profile));
-        matches.sort(Comparator.comparing(SupportMatch::verdict));
+        matches.sort(Comparator.comparingInt(match -> match.verdict().ordinal()));
         return matches;
     }
 
