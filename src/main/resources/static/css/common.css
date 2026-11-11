@@ -69,13 +69,14 @@ input[type="checkbox"], input[type="radio"] { width: auto; }
 
 /* 홈과 캘린더 */
 .portal { --primary: #254673; background: #f6f7f9; }
-.portal nav, .portal main { max-width: 1160px; }
-.portal nav { align-items: center; gap: 4px 14px; }
-.portal nav a { border-radius: 4px; }
-.portal nav .site-name {
+.site-header { --primary: #254673; }
+.portal nav, .portal main, .site-header nav { max-width: 1160px; }
+.portal nav, .site-header nav { align-items: center; gap: 4px 14px; }
+.portal nav a, .site-header nav a { border-radius: 4px; }
+.portal nav .site-name, .site-header nav .site-name {
     margin-right: auto; padding-left: 0; color: var(--ink); font-size: 18px; font-weight: 750;
 }
-.portal nav .site-name[aria-current="page"] { background: transparent; }
+.portal nav .site-name[aria-current="page"], .site-header nav .site-name[aria-current="page"] { background: transparent; }
 .portal .card { border-radius: 6px; }
 .portal .btn { border-radius: 5px; }
 
@@ -117,7 +118,7 @@ input[type="checkbox"], input[type="radio"] { width: auto; }
     .calendar-layout { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 640px) {
-    .portal nav .site-name { flex-basis: 100%; }
+    .portal nav .site-name, .site-header nav .site-name { flex-basis: 100%; }
     .home-overview { grid-template-columns: minmax(0, 1fr); gap: 0; }
     .calendar-month { padding: 12px; }
 }
