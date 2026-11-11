@@ -43,7 +43,7 @@
                 <h1 id="signup-title">회원가입</h1>
                 <p class="lead">나에게 맞는 지원사업을 찾는 첫걸음을 시작해 보세요.</p>
             </div>
-            <form id="signup-form" class="card stack signup-form" method="post" aria-labelledby="signup-title">
+            <form id="signup-form" class="card stack signup-form" method="post" action="/api/auth/signup" aria-labelledby="signup-title">
                 <div>
                     <label for="name">이름</label>
                     <input id="name" name="name" type="text" placeholder="이름을 입력해 주세요"
@@ -52,7 +52,7 @@
                 <div>
                     <label for="email">이메일</label>
                     <input id="email" name="email" type="email" placeholder="beomjjang@dankook.ac.kr"
-                        autocomplete="username" inputmode="email" autocapitalize="none" spellcheck="false" required>
+                        autocomplete="username" inputmode="email" autocapitalize="none" spellcheck="false" maxlength="254" required>
                 </div>
                 <div>
                     <label for="password">비밀번호</label>
@@ -87,9 +87,13 @@
         (() => {
             const form = document.getElementById("signup-form");
             const name = document.getElementById("name");
+            const email = document.getElementById("email");
             const password = document.getElementById("password");
             const confirmation = document.getElementById("password-confirm");
             const message = document.getElementById("message");
+            const submit = document.getElementById("signup-submit");
+            let submitting = false;
+            let completed = false;
 
             function validateFields() {
                 name.setCustomValidity(name.value && !name.value.trim() ? "이름을 입력해 주세요." : "");
@@ -116,16 +120,56 @@
                 message.textContent = "";
             });
 
-            // 계정 API가 추가되면 이 제출 처리에 연결합니다. 입력값은 전송하거나 저장하지 않습니다.
-            form.addEventListener("submit", event => {
+            form.addEventListener("submit", async event => {
                 event.preventDefault();
+                if (submitting || completed) return;
                 validateFields();
                 if (!form.reportValidity()) return;
-                message.textContent = "회원가입 기능을 준비 중입니다. 잠시 후 다시 이용해 주세요.";
-                message.hidden = false;
+
+                const payload = {
+                    name: name.value.trim(), email: email.value.trim(),
+                    password: password.value, passwordConfirm: confirmation.value
+                };
+                submitting = true;
+                submit.disabled = true;
+                submit.textContent = "가입 처리 중…";
+                form.setAttribute("aria-busy", "true");
+                message.hidden = true;
+                // 요청 중 입력값이 변경되거나 중복 제출되는 것을 막는다.
+                const controls = [...form.querySelectorAll("input, button")];
+                controls.forEach(control => { control.disabled = true; });
+                try {
+                    const response = await fetch("/api/auth/signup", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload)
+                    });
+                    const result = await response.json().catch(() => null);
+                    if (!response.ok) {
+                        const details = result?.errors ? Object.values(result.errors).join(" ") : "";
+                        throw new Error(details || result?.message || "회원가입을 처리할 수 없습니다. 잠시 후 다시 시도해 주세요.");
+                    }
+                    completed = true;
+                    form.reset();
+                    password.type = "password";
+                    confirmation.type = "password";
+                    message.className = "notice";
+                    message.textContent = "회원가입이 완료되었습니다. 알바 첫걸음에 오신 것을 환영합니다.";
+                } catch (error) {
+                    message.className = "notice warn";
+                    message.textContent = error instanceof TypeError
+                        ? "서버에 연결할 수 없습니다. 네트워크를 확인한 후 다시 시도해 주세요."
+                        : error.message;
+                } finally {
+                    submitting = false;
+                    form.removeAttribute("aria-busy");
+                    controls.forEach(control => { control.disabled = completed; });
+                    submit.textContent = completed ? "가입 완료" : "회원가입";
+                    message.hidden = false;
+                }
             });
 
-            document.getElementById("signup-submit").disabled = false;
+            submit.disabled = false;
         })();
     </script>
 </body>
