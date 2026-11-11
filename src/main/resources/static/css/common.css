@@ -1,0 +1,9 @@
+/* 모든 빈 화면에 동일한 메뉴와 기본 여백을 적용한다. */
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, sans-serif; color: #243047; background: #f7f8fa; }
+header { background: #fff; border-bottom: 1px solid #dce1e8; }
+nav { display: flex; flex-wrap: wrap; gap: 20px; max-width: 1000px; margin: auto; padding: 20px; }
+a { color: #2459a7; }
+a:focus-visible { outline: 3px solid #2459a7; outline-offset: 4px; }
+main { max-width: 1000px; min-height: 65vh; margin: auto; padding: 40px 20px; }
+footer { padding: 24px 20px; text-align: center; border-top: 1px solid #dce1e8; }
