@@ -6,6 +6,8 @@
     <title>지원사업 추천 | 알바 계약 도우미</title>
     <link rel="stylesheet" href="/css/common.css">
     <script src="/js/common.js" defer></script>
+    <script src="/js/ui.js" defer></script>
+    <script src="/js/support.js" defer></script>
 </head>
 <body>
     <header><nav aria-label="공통 메뉴">
@@ -18,7 +20,46 @@
     </nav></header>
     <main>
         <h1>지원사업 추천</h1>
-        <p>담당: C, 여기에 구현</p>
+        <p class="lead">내 정보와 계약 조건에 맞는 지원사업을 찾아봅니다.</p>
+        <div class="notice warn">현재 목록은 화면 시연용 <strong>가상 사업</strong>입니다. 실제 제도·기관·신청 링크가 아닙니다.</div>
+        <form id="profile-form" class="card stack" style="margin-top:16px">
+            <h2>내 정보</h2>
+            <div class="form-grid">
+                <div><label for="age">만 나이</label><input id="age" type="number" min="0" max="120" step="1" inputmode="numeric"></div>
+                <div>
+                    <label for="sido">거주 시·도</label>
+                    <input id="sido" type="text" list="sido-list" autocomplete="off">
+                    <datalist id="sido-list"></datalist>
+                </div>
+                <div><label for="sigungu">시·군·구</label><input id="sigungu" type="text"></div>
+                <div>
+                    <label for="status">현재 상태</label>
+                    <select id="status">
+                        <option value="">선택 안 함</option>
+                        <option>대학생</option><option>구직자</option><option>재직자</option><option>기타</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="housing">거주 형태</label>
+                    <select id="housing">
+                        <option value="">선택 안 함</option>
+                        <option>월세</option><option>전세</option><option>자가</option><option>가족과 거주</option><option>기숙사·기타</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="householdIncomeLevel">가구 소득</label>
+                    <select id="householdIncomeLevel">
+                        <option value="">선택 안 함</option>
+                        <option>중위소득 50% 이하</option><option>중위소득 100% 이하</option>
+                        <option>중위소득 150% 이하</option><option>중위소득 150% 초과</option><option>미확인</option>
+                    </select>
+                </div>
+            </div>
+            <p class="hint" id="contract-note"></p>
+            <div id="message" class="notice" role="alert" hidden></div>
+            <div class="row end"><button type="submit" class="btn primary" id="submit">추천 받기</button></div>
+        </form>
+        <div id="results" aria-live="polite"></div>
     </main>
     <footer>본 서비스는 정보 제공용이며 법률 자문이 아닙니다</footer>
 </body>

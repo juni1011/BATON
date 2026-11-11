@@ -6,6 +6,8 @@
     <title>추출 값 확인 | 알바 계약 도우미</title>
     <link rel="stylesheet" href="/css/common.css">
     <script src="/js/common.js" defer></script>
+    <script src="/js/ui.js" defer></script>
+    <script src="/js/confirm.js" defer></script>
 </head>
 <body>
     <header><nav aria-label="공통 메뉴">
@@ -18,7 +20,82 @@
     </nav></header>
     <main>
         <h1>추출 값 확인</h1>
-        <p>담당: A, 여기에 구현</p>
+        <p class="lead">계약서와 다르게 읽힌 값을 고쳐 주세요. 계약서에 적혀 있지 않은 항목은 비워 두면 "미기재"로 점검합니다.</p>
+        <div id="origin" class="notice" hidden></div>
+        <form id="confirm-form" class="stack" novalidate>
+            <section class="card">
+                <h2>사업장과 업무</h2>
+                <div class="form-grid">
+                    <div><label for="employerName">사용자(상호)</label><input id="employerName" type="text"></div>
+                    <div><label for="workplace">근무 장소</label><input id="workplace" type="text"></div>
+                    <div class="wide"><label for="jobDescription">업무 내용</label><input id="jobDescription" type="text"></div>
+                </div>
+            </section>
+            <section class="card">
+                <h2>기간과 근무 시간</h2>
+                <div class="form-grid">
+                    <div><label for="contractStart">계약 시작일</label><input id="contractStart" type="date"></div>
+                    <div><label for="contractEnd">계약 종료일</label><input id="contractEnd" type="date"></div>
+                    <div><label for="weeklyHours">주 소정근로시간</label><input id="weeklyHours" type="number" min="0" max="168" step="0.5" inputmode="decimal"></div>
+                    <div class="wide">
+                        <span class="label" id="workDays-label">근무 요일</span>
+                        <div class="checks" id="workDays" role="group" aria-labelledby="workDays-label"></div>
+                    </div>
+                    <div><label for="startTime">근무 시작</label><input id="startTime" type="time"></div>
+                    <div><label for="endTime">근무 종료</label><input id="endTime" type="time"></div>
+                    <div><label for="breakMinutes">휴게시간 (분)</label><input id="breakMinutes" type="number" min="0" max="600" step="1" inputmode="numeric"></div>
+                </div>
+            </section>
+            <section class="card">
+                <h2>임금</h2>
+                <div class="form-grid">
+                    <div><label for="hourlyWage">시급 (원)</label><input id="hourlyWage" type="number" min="0" step="10" inputmode="numeric"></div>
+                    <div><label for="payDay">임금 지급일 (매월 ○일)</label><input id="payDay" type="number" min="1" max="31" step="1" inputmode="numeric"></div>
+                    <div>
+                        <label for="weeklyHolidayPayIncluded">주휴수당</label>
+                        <select id="weeklyHolidayPayIncluded">
+                            <option value="">계약서에 언급 없음</option>
+                            <option value="false">시급과 별도로 지급</option>
+                            <option value="true">시급에 포함</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+            <section class="card">
+                <h2>수습과 사회보험</h2>
+                <div class="form-grid">
+                    <div>
+                        <label for="probation">수습 적용</label>
+                        <select id="probation">
+                            <option value="">계약서에 언급 없음</option>
+                            <option value="false">수습 없음</option>
+                            <option value="true">수습 있음</option>
+                        </select>
+                    </div>
+                    <div><label for="probationMonths">수습 기간 (개월)</label><input id="probationMonths" type="number" min="0" max="24" step="1" inputmode="numeric"></div>
+                    <div><label for="probationWageRate">수습 임금 비율 (%)</label><input id="probationWageRate" type="number" min="0" max="100" step="1" inputmode="numeric"></div>
+                    <div>
+                        <label for="socialInsuranceMentioned">사회보험(4대 보험)</label>
+                        <select id="socialInsuranceMentioned">
+                            <option value="">계약서에 언급 없음</option>
+                            <option value="true">가입한다고 적혀 있음</option>
+                            <option value="false">가입하지 않는다고 적혀 있음</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+            <section class="card">
+                <h2>계약서 조항 원문</h2>
+                <label for="clauses">한 줄에 조항 하나씩</label>
+                <textarea id="clauses" rows="6"></textarea>
+                <p class="hint">위약금, 급여 미지급 같은 문구를 이 원문에서 찾습니다.</p>
+            </section>
+            <div id="message" class="notice" role="alert" hidden></div>
+            <div class="row end">
+                <a class="btn" href="/upload.html">다시 업로드</a>
+                <button type="submit" class="btn primary" id="submit">저장하고 점검하기</button>
+            </div>
+        </form>
     </main>
     <footer>본 서비스는 정보 제공용이며 법률 자문이 아닙니다</footer>
 </body>

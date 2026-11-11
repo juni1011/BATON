@@ -2,8 +2,9 @@
 
 ## 범위와 공통 규칙
 
-현재는 1단계 스텁이다. 추출·법률 점검·급여 계산·자격 판정·일정 생성 로직은 없다.
-모든 응답은 입력과 무관한 고정 예시이며, 월급 1,560,000원도 계산 결과가 아니다.
+네 API 모두 외부 API(AI·OCR·공공데이터) 없이 서버 안의 규칙으로 동작한다.
+추출은 정규식 규칙, 점검은 정해진 법령 기준 규칙, 지원사업은 코드에 들어 있는 가상 사업 목록과의 조건 비교다.
+PDF·이미지 인식과 실제 지원사업 데이터 연동은 외부 API가 필요해 구현하지 않았다.
 본 서비스는 정보 제공용이며 법률 자문이 아닙니다.
 
 계약서에 적혀 있지 않은 값은 `null`로 둔다. 0, false, 빈 문자열 등으로 추정하지 않는다.
@@ -57,7 +58,11 @@ ContractInfo는 common 패키지에 한 번만 정의한다. contract API도 이
 
 `multipart/form-data`의 `file` 또는 `text` 파라미터를 받는다.
 텍스트만 보내면 `application/x-www-form-urlencoded`도 지원한다.
-현재는 둘 다 선택적이며, 둘 다 있거나 없어도 샘플 1번을 반환한다.
+파일이 있으면 파일을, 없으면 text를 사용한다. 파일은 UTF-8 텍스트(.txt 또는 text/*)만 받는다.
+둘 다 비어 있으면 400, 텍스트가 아닌 파일은 415를 반환한다.
+`ContractTextParser`가 "라벨: 값" 줄(사용자, 근무 장소, 업무, 계약 기간, 근무 요일, 근무 시간)과
+문장 속 표현(시급 ○원, 매월 ○일, ○분의 휴게시간, 주휴수당, 수습, 사회보험)을 읽는다.
+찾지 못한 값은 null이다. 라벨이 없는 문장 줄은 clauses에 원문 그대로 담는다.
 JSON 요청 본문은 사용하지 않는다. 아래 JSON은 폼 파라미터를 설명하는 표현이다.
 
 ```json
@@ -153,22 +158,39 @@ curl -X POST --data-urlencode 'text=개발용 계약서 내용' http://localhost
   "dangerCount": 0,
   "warningCount": 0,
   "missingCount": 0,
-  "estimatedMonthlyPay": 1560000,
+  "estimatedMonthlyPay": 1564286,
   "items": [
     {
-      "id": "check-example-1",
-      "title": "주휴수당 별도 지급 (스텁)",
+      "id": "minimum-wage",
+      "title": "최저임금 이상",
       "level": "OK",
       "originalText": "시급은 15,000원이며 주휴수당은 시급에 포함하지 않고 별도로 지급한다.",
-      "reason": "정상 표시를 위한 고정 예시이며 실제 계약을 점검하지 않습니다.",
-      "legalBasis": "개발용 예시: 법률 근거 검토 미구현",
-      "questionForEmployer": "주휴수당 산정 내역을 확인할 수 있나요?"
+      "reason": "시급 15,000원은 2026년 최저임금 10,320원 이상입니다.",
+      "legalBasis": "최저임금법 제6조(최저임금의 효력)",
+      "questionForEmployer": null
+    },
+    {
+      "id": "weekly-holiday-pay",
+      "title": "주휴수당 별도 지급",
+      "level": "OK",
+      "originalText": "시급은 15,000원이며 주휴수당은 시급에 포함하지 않고 별도로 지급한다.",
+      "reason": "주휴수당을 시급과 별도로 지급한다고 적혀 있습니다.",
+      "legalBasis": "근로기준법 제55조(휴일), 제18조(단시간근로자의 근로조건)",
+      "questionForEmployer": null
     }
   ]
 }
 ```
 
-`CheckLevel`: DANGER, WARNING, MISSING, OK. 건수는 해당 수준의 items 개수이고 OK는 집계하지 않는다.
+위 items는 앞의 2건만 보인 것이다. `CheckLevel`: DANGER, WARNING, MISSING, OK. 건수는 해당 수준의 items 개수이고 OK는 집계하지 않는다.
+items는 DANGER, WARNING, MISSING, OK 순이다. originalText·questionForEmployer는 없으면 null이다.
+
+`ContractChecker`의 점검 항목(id): 최저임금(minimum-wage), 주휴수당(weekly-holiday-pay), 휴게시간(break-time),
+임금 지급일(pay-day), 필수 기재사항 누락(missing-*), 주 40·52시간 초과(weekly-hours-limit),
+위약금 조항(penalty-clause-n), 임금 미지급·공제 조항(unpaid-clause-n), 수습 감액(probation), 사회보험(social-insurance).
+최저임금은 계약 시작 연도 기준이며 표(2025년 10,030원, 2026년 10,320원)에 없는 연도는 가장 가까운 연도 값으로 비교한다.
+estimatedMonthlyPay는 시급 × (주 근로시간 + 주휴시간) × (365 ÷ 7 ÷ 12)의 세전 금액이다.
+주휴시간은 주 15시간 이상이고 시급에 포함되지 않은 경우에만 더하며, 시급이나 주 근로시간이 없으면 null이다.
 
 ## 3. POST /api/supports/match
 
@@ -224,35 +246,43 @@ curl -X POST --data-urlencode 'text=개발용 계약서 내용' http://localhost
 [
   {
     "id": "support-example-a",
-    "name": "예시 지원사업 A",
+    "name": "예시 청년 근로자 교통비 지원",
     "organization": "가상청년센터",
     "verdict": "ELIGIBLE",
-    "reason": "가능 상태 표시용 고정 예시입니다. 실제 자격 판정이 아닙니다.",
+    "reason": "[가상 예시] 나이, 근로시간 조건을 충족합니다.",
     "applyStart": "2026-11-01",
     "applyEnd": "2026-11-30",
     "applyUrl": "https://example.com/support-a",
     "requiredDocuments": [
-      "예시 신청서"
+      "예시 신청서",
+      "근로계약서 사본"
     ]
   },
   {
     "id": "support-example-b",
-    "name": "예시 지원사업 B",
+    "name": "예시 대학생 근로 장학 지원",
     "organization": "가상지원재단",
     "verdict": "NEED_CHECK",
-    "reason": "추가 확인 상태 표시용 고정 예시입니다.",
+    "reason": "[가상 예시] 확인이 필요한 조건: 가구 소득(중위소득 100% 이하).",
     "applyStart": "2026-12-01",
     "applyEnd": "2026-12-31",
     "applyUrl": "https://example.com/support-b",
     "requiredDocuments": [
       "예시 신청서",
-      "예시 확인서"
+      "재학증명서",
+      "소득 확인서"
     ]
   }
 ]
 ```
 
-`MatchVerdict`: ELIGIBLE, NEED_CHECK, NOT_ELIGIBLE. 모든 사업·기관·일정·서류는 가상이며 example.com은 예시 링크다. 실제 지원 조건이나 금액을 뜻하지 않는다. 프로필 문자열의 분류 체계는 아직 정하지 않았다.
+위 응답은 5건 중 2건만 보인 것이다. `MatchVerdict`: ELIGIBLE, NEED_CHECK, NOT_ELIGIBLE 순으로 정렬한다.
+`SupportMatcher`에 가상 사업 5건이 들어 있고 나이, 시·도, 상태, 거주 형태, 가구 소득, 주 근로시간 조건을 비교한다.
+조건에 맞지 않는 값이 하나라도 있으면 NOT_ELIGIBLE, 값이 없거나 "미확인"인 조건이 있으면 NEED_CHECK다.
+모든 사업·기관·조건·일정·서류는 가상이며 example.com은 예시 링크다. 실제 지원 조건이나 금액을 뜻하지 않는다.
+
+프로필 선택지: status는 대학생·구직자·재직자·기타, housing은 월세·전세·자가·가족과 거주·기숙사·기타,
+householdIncomeLevel은 중위소득 50% 이하·100% 이하·150% 이하·150% 초과·미확인이다. profile과 contract는 null일 수 있다.
 
 ## 4. POST /api/calendar/events
 
@@ -297,45 +327,51 @@ curl -X POST --data-urlencode 'text=개발용 계약서 내용' http://localhost
 ```json
 [
   {
-    "id": "event-payday",
-    "title": "급여일 (예시)",
-    "type": "PAYDAY",
-    "date": "2026-12-10",
-    "startTime": null,
-    "endTime": null,
-    "description": "고정 샘플 급여일",
-    "sourceLink": "/confirm.html"
-  },
-  {
-    "id": "event-work",
-    "title": "근무 (예시)",
+    "id": "work-2026-11-02",
+    "title": "가상별빛상점 근무",
     "type": "WORK",
     "date": "2026-11-02",
     "startTime": "14:00",
     "endTime": "18:30",
-    "description": "휴게시간 30분을 포함한 고정 샘플",
+    "description": "가상시 상상구 예시로 가상건물 · 휴게시간 30분",
     "sourceLink": "/confirm.html"
   },
   {
-    "id": "event-end",
-    "title": "계약 종료 (예시)",
-    "type": "CONTRACT_END",
-    "date": "2027-02-28",
+    "id": "payday-2026-11-10",
+    "title": "급여일",
+    "type": "PAYDAY",
+    "date": "2026-11-10",
     "startTime": null,
     "endTime": null,
-    "description": "고정 샘플 계약 종료일",
+    "description": "매월 10일 지급",
+    "sourceLink": "/confirm.html"
+  },
+  {
+    "id": "payday-2027-03-10",
+    "title": "급여일",
+    "type": "PAYDAY",
+    "date": "2027-03-10",
+    "startTime": null,
+    "endTime": null,
+    "description": "계약 종료 후 정산분 지급 여부를 확인하세요.",
     "sourceLink": "/confirm.html"
   }
 ]
 ```
 
 `EventType`: PAYDAY, WORK, CONTRACT_END, PROBATION_END, SUPPORT_DEADLINE, TODO, CUSTOM.
-종일 일정의 startTime과 endTime은 null이다. 외부 캘린더 연동이나 저장은 하지 않는다.
+위 응답은 일부만 보인 것이며 날짜순으로 정렬된다. 종일 일정의 startTime과 endTime은 null이다. 외부 캘린더 연동이나 저장은 하지 않는다.
+`CalendarEventGenerator`는 계약 시작일이 없으면 []를 반환한다. 근무일(work-날짜)은 시작일부터 종료일까지의 근무 요일이며,
+종료일이 없으면 3개월, 길어도 12개월까지만 만든다. 급여일(payday-날짜)은 시작일 다음 날부터 종료 한 달 뒤까지의 매월 지급일이다.
+수습 종료(probation-end)는 수습 개월 수가 있을 때, 계약 종료(contract-end)는 종료일이 있을 때 만든다.
+SUPPORT_DEADLINE, TODO, CUSTOM은 서버가 만들지 않고 화면에서 추가해 localStorage에 함께 저장한다.
 JSON API는 유효한 JSON 본문이 필요하며 형식이 깨지거나 본문이 없으면 기본 Spring MVC 오류 응답을 사용한다.
 
 ## 프런트 공통 도구
 
-모든 화면에서 `/js/common.js`를 불러온다. 외부 라이브러리는 없다.
+모든 화면에서 `/js/common.js`, `/js/ui.js`, 화면별 `/js/<화면>.js`를 순서대로 불러온다. 외부 라이브러리는 없다.
+`ui.js`의 `window.EasytonUI`는 표시용 도구(h, won, dateLabel, errorText, notify)와
+점검·일정 생성을 함께 실행해 저장하는 analyze(contract), 사용자 추가 일정을 보존하는 saveGeneratedEvents(events)를 제공한다.
 `window.Easyton`의 함수는 다음과 같다.
 
 | 함수 | 동작 |
