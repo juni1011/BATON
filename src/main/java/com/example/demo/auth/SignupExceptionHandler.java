@@ -11,7 +11,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-@RestControllerAdvice(assignableTypes = SignupController.class)
+@RestControllerAdvice(assignableTypes = {SignupController.class, SigninController.class})
 public class SignupExceptionHandler {
     public record SignupError(String message, Map<String, String> errors) {
     }
@@ -27,6 +27,12 @@ public class SignupExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     ResponseEntity<SignupError> malformedJson() {
         return ResponseEntity.badRequest().body(new SignupError("올바른 JSON 요청을 보내 주세요.", Map.of()));
+    }
+
+    @ExceptionHandler(SigninService.InvalidCredentialsException.class)
+    ResponseEntity<SignupError> invalidCredentials() {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new SignupError("이메일 또는 비밀번호가 올바르지 않습니다.", Map.of()));
     }
 
     @ExceptionHandler(DuplicateKeyException.class)

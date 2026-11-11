@@ -84,14 +84,53 @@
                 toggle.setAttribute("aria-label", visible ? "비밀번호 숨기기" : "비밀번호 표시");
             });
 
-            // 로그인 API가 추가되면 이 제출 처리에 연결합니다. 입력값은 전송하거나 저장하지 않습니다.
-            form.addEventListener("submit", event => {
+            const email = document.getElementById("email");
+            const submit = document.getElementById("signin-submit");
+            let submitting = false;
+
+            form.addEventListener("submit", async event => {
                 event.preventDefault();
-                message.textContent = "로그인 기능을 준비 중입니다. 지금은 로그인 없이 서비스를 이용해 주세요.";
-                message.hidden = false;
+                if (submitting) return;
+                submitting = true;
+                submit.disabled = true;
+                submit.textContent = "로그인 중…";
+                message.hidden = true;
+                let success = false;
+                try {
+                    const response = await fetch("/api/auth/signin", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ email: email.value.trim(), password: password.value })
+                    });
+                    const result = await response.json().catch(() => null);
+                    if (!response.ok) {
+                        const details = result?.errors ? Object.values(result.errors).join(" ") : "";
+                        throw new Error(response.status >= 500
+                            ? "로그인을 처리할 수 없습니다. 잠시 후 다시 시도해 주세요."
+                            : details || result?.message || "로그인에 실패했습니다.");
+                    }
+                    success = true;
+                    message.className = "notice";
+                    message.textContent = "로그인되었습니다. 홈으로 이동합니다.";
+                    message.hidden = false;
+                    location.assign("/index.html");
+                } catch (error) {
+                    message.className = "notice warn";
+                    message.textContent = error instanceof TypeError
+                        ? "서버에 연결할 수 없습니다. 네트워크를 확인한 후 다시 시도해 주세요."
+                        : error.message;
+                    message.hidden = false;
+                } finally {
+                    submitting = false;
+                    if (!success) {
+                        submit.disabled = false;
+                        submit.textContent = "로그인";
+                    }
+                }
             });
 
             form.addEventListener("input", () => {
+                message.className = "notice";
                 message.hidden = true;
                 message.textContent = "";
             });
