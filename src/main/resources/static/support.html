@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>지원사업 추천 | 알바 계약 도우미</title>
+    <title>지원사업 추천 | 청년 지원사업 도우미</title>
     <link rel="stylesheet" href="/css/common.css">
     <script src="/js/common.js" defer></script>
     <script src="/js/ui.js" defer></script>
@@ -12,15 +12,12 @@
 <body>
     <header><nav aria-label="공통 메뉴">
         <a href="/index.html">홈</a>
-        <a href="/upload.html">계약서 업로드</a>
-        <a href="/confirm.html">추출 값 확인</a>
-        <a href="/report.html">점검 리포트</a>
         <a href="/support.html">지원사업 추천</a>
         <a href="/calendar.html">캘린더</a>
     </nav></header>
     <main>
         <h1>지원사업 추천</h1>
-        <p class="lead">내 정보와 계약 조건에 맞는 지원사업을 찾아봅니다.</p>
+        <p class="lead">내 정보에 맞는 지원사업을 찾아봅니다.</p>
         <div class="notice warn">현재 목록은 화면 시연용 <strong>가상 사업</strong>입니다. 실제 제도·기관·신청 링크가 아닙니다.</div>
         <form id="profile-form" class="card stack" style="margin-top:16px">
             <h2>내 정보</h2>
@@ -55,12 +52,11 @@
                     </select>
                 </div>
             </div>
-            <p class="hint" id="contract-note"></p>
             <div id="message" class="notice" role="alert" hidden></div>
             <div class="row end"><button type="submit" class="btn primary" id="submit">추천 받기</button></div>
         </form>
         <div id="results" aria-live="polite"></div>
     </main>
-    <footer>본 서비스는 정보 제공용이며 법률 자문이 아닙니다</footer>
+    <footer>본 서비스는 정보 제공용이며 지원사업 목록은 가상 예시입니다</footer>
 </body>
 </html>

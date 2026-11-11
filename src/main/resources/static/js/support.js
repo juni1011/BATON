@@ -1,6 +1,6 @@
 "use strict";
 
-/** 담당 C: 프로필을 입력받아 가상 지원사업 매칭 결과를 보여 주고 마감일을 캘린더에 추가한다. */
+/** 프로필을 입력받아 가상 지원사업 매칭 결과를 보여 주고 마감일을 캘린더에 추가한다. */
 document.addEventListener("DOMContentLoaded", () => {
     const { VERDICT_LABELS, h, dateLabel, errorText, notify } = EasytonUI;
     const form = document.getElementById("profile-form");
@@ -14,12 +14,6 @@ document.addEventListener("DOMContentLoaded", () => {
         "경상북도", "경상남도", "제주특별자치도", "가상시"];
 
     field("sido-list").append(...SIDO.map(name => h("option", { value: name })));
-
-    const contract = Easyton.getContractInfo();
-    field("contract-note").append(contract
-        ? `저장된 계약(${contract.employerName || "상호 미기재"})의 근로시간도 함께 비교합니다.`
-        : "저장된 계약서가 없어 근로 조건이 필요한 사업은 '확인 필요'로 표시됩니다. ",
-        !contract && h("a", { href: "/upload.html", text: "계약서 업로드" }));
 
     const profile = Easyton.getUserProfile();
     if (profile) {
@@ -79,7 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
         submit.disabled = true;
         try {
             Easyton.saveUserProfile(next);
-            const matches = await Easyton.postJson("/api/supports/match", { profile: next, contract: Easyton.getContractInfo() });
+            const matches = await Easyton.postJson("/api/supports/match", { profile: next });
             Easyton.saveSupportMatches(matches);
             notify(message, "");
             render(matches);

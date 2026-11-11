@@ -1,18 +1,17 @@
 "use strict";
 
-/** 담당 D: 저장된 일정을 월 달력으로 보여 주고 직접 일정 추가·삭제를 지원한다. */
+/** 저장된 일정을 월 달력으로 보여 주고 직접 일정 추가·삭제를 지원한다. */
 document.addEventListener("DOMContentLoaded", () => {
-    const { EVENT_LABELS, USER_EVENT_TYPES, h, dateLabel, todayIso, errorText, notify } = EasytonUI;
+    const { EVENT_LABELS, h, dateLabel, todayIso, notify } = EasytonUI;
     const grid = document.getElementById("grid");
     const message = document.getElementById("message");
     const addForm = document.getElementById("add-form");
-    const regenerate = document.getElementById("regenerate");
     const field = id => document.getElementById(id);
     const pad = value => String(value).padStart(2, "0");
     const today = todayIso();
     const hidden = new Set();
 
-    let events = Easyton.getCalendarEvents();
+    let events = Easyton.getCalendarEvents().filter(event => event.type in EVENT_LABELS);
     // 오늘이 있는 달에 일정이 없으면 가장 가까운 다음 일정(없으면 첫 일정)의 달부터 보여 준다.
     const sortedDates = events.map(event => event.date).filter(Boolean).sort();
     let selected = today;
@@ -79,7 +78,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 event.description && h("div", { class: "small", text: event.description }),
                 event.sourceLink && event.sourceLink.startsWith("/") && event.sourceLink !== "/calendar.html"
                     && h("a", { class: "small", href: event.sourceLink, text: "출처 보기" })),
-            USER_EVENT_TYPES.includes(event.type) && h("button", { type: "button", class: "btn small danger",
+            h("button", { type: "button", class: "btn small danger",
                 "aria-label": `${event.title} 삭제`, onclick: () => remove(event.id) }, "삭제"))));
     }
 
@@ -137,28 +136,8 @@ document.addEventListener("DOMContentLoaded", () => {
         renderAll();
     });
 
-    const contract = Easyton.getContractInfo();
-    regenerate.hidden = !contract;
-    regenerate.addEventListener("click", async () => {
-        regenerate.disabled = true;
-        try {
-            const generated = await Easyton.postJson("/api/calendar/events", contract);
-            events = EasytonUI.saveGeneratedEvents(generated);
-            notify(message, generated.length
-                ? `계약 일정 ${generated.length}건을 다시 만들었습니다.`
-                : "계약 시작일이 없어 일정을 만들지 못했습니다. 추출 값 확인에서 시작일을 입력해 주세요.", generated.length ? "" : "warn");
-            renderAll();
-        } catch (error) {
-            notify(message, errorText(error), "error");
-        } finally {
-            regenerate.disabled = false;
-        }
-    });
-
     if (!events.length) {
-        notify(message, contract
-            ? "아직 계약 일정이 없습니다. '계약 일정 다시 만들기'를 누르거나 직접 일정을 추가해 보세요."
-            : "저장된 계약서가 없습니다. 계약서를 업로드하면 근무일과 급여일이 자동으로 표시됩니다. 직접 일정을 추가할 수도 있습니다.");
+        notify(message, "아직 일정이 없습니다. 아래에서 직접 추가하거나 지원사업 추천 결과에서 마감일을 추가해 보세요.");
     }
     renderAll();
 });
