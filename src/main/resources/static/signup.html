@@ -154,7 +154,8 @@
                     password.type = "password";
                     confirmation.type = "password";
                     message.className = "notice";
-                    message.textContent = "회원가입이 완료되었습니다. 알바 첫걸음에 오신 것을 환영합니다.";
+                    message.textContent = "회원가입이 완료되었습니다. 알바 첫걸음에 오신 것을 환영합니다. 로그인 화면으로 이동합니다.";
+                    setTimeout(() => location.assign("/signin.html"), 1500);
                 } catch (error) {
                     message.className = "notice warn";
                     message.textContent = error instanceof TypeError

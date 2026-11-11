@@ -45,6 +45,12 @@
 검증 오류의 `errors`에는 필드별 메시지만 포함하며 입력된 비밀번호나 SQL 오류는 노출하지 않는다.
 DB 연결 설정과 로컬 실행 방법은 [README.md](../README.md)를 참고한다.
 
+## 로그인 (세션 쿠키)
+
+- `POST /api/auth/signin` `{"email","password"}` → `200 {"id","name","email"}` 및 `JSESSIONID` 쿠키. 이메일 또는 비밀번호가 틀리면 `401 {"message":"이메일 또는 비밀번호가 올바르지 않습니다.","errors":{}}` (어느 쪽이 틀렸는지 알리지 않음). 필드 누락은 400.
+- `GET /api/auth/me` → 로그인 상태면 `200 {"id","name","email"}`, 아니면 `401`.
+- `POST /api/auth/signout` → `204`, 세션을 무효화한다.
+
 ## POST /api/supports/match
 
 요청 `application/json` (MatchRequest):

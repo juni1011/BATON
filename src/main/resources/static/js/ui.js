@@ -94,3 +94,23 @@ window.EasytonUI = (() => {
     return Object.freeze({ DAYS, DAY_LABELS, LEVEL_LABELS, VERDICT_LABELS, EVENT_LABELS, USER_EVENT_TYPES,
         h, won, dateLabel, todayIso, errorText, notify, saveGeneratedEvents, analyze });
 })();
+
+/** 로그인 상태이면 메뉴의 "로그인" 링크를 "이름님 · 로그아웃"으로 바꾼다. 서버에 연결할 수 없으면 그대로 둔다. */
+document.addEventListener("DOMContentLoaded", async () => {
+    const link = document.querySelector('.site-header nav a[href="/signin.html"]');
+    if (!link) return;
+    try {
+        const response = await fetch("/api/auth/me");
+        if (!response.ok) return;
+        const user = await response.json();
+        const logout = EasytonUI.h("a", {
+            href: "#", text: "로그아웃",
+            onclick: async event => {
+                event.preventDefault();
+                try { await fetch("/api/auth/signout", { method: "POST" }); } catch { /* 무시 */ }
+                location.assign("/index.html");
+            }
+        });
+        link.replaceWith(EasytonUI.h("span", { class: "nav-user", text: `${user.name}님` }), logout);
+    } catch { /* 비로그인 상태로 둔다 */ }
+});
