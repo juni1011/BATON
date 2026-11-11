@@ -6,16 +6,61 @@
 
 ## 실행
 
-Java 21이 필요합니다. 프로젝트 루트에서 실행합니다.
+Java 21과 MySQL 8.4가 필요합니다. 프로젝트 루트에서 실행합니다.
+
+### Docker로 MySQL 준비
+
+Docker Desktop을 실행한 뒤 환경변수 파일을 만듭니다.
 
 ```sh
+cp .env.example .env
+```
+
+`.env`의 `DB_PASSWORD`를 개발용 DB 비밀번호로 변경한 뒤, **같은 터미널에서** 실행합니다.
+`.env`는 Git에서 제외됩니다. Docker Compose는 이 파일을 자동으로 읽지만 Spring Boot는 읽지 않으므로 아래의 `source` 단계가 필요합니다.
+
+```sh
+set -a
+source .env
+set +a
+docker compose up -d --wait
 ./gradlew bootRun
 ```
 
 접속 주소: http://localhost:8080/ (index.html).
-화면: /upload.html(계약서 입력), /confirm.html(추출값 확인), /report.html(점검), /support.html(지원사업 추천), /calendar.html(캘린더).
+화면: /signup.html(회원가입), /upload.html(계약서 입력), /confirm.html(추출값 확인), /report.html(점검), /support.html(지원사업 추천), /calendar.html(캘린더).
 현재 구현은 텍스트 파일, 붙여넣기, 가상 샘플 3종을 규칙으로 처리합니다. PDF·사진의 AI 추출과 실제 지원사업 데이터는 제출 목표에 포함됩니다.
 서버 종료는 Ctrl+C를 사용합니다.
+
+MySQL의 데이터베이스·사용자 이름은 `easyton`, 포트는 `3306`입니다. `app_users` 테이블은 서버 시작 시 `schema.sql`로 생성하며, 기존 테이블과 회원 데이터는 유지합니다. 스키마가 변경되면 별도 마이그레이션이 필요합니다.
+`docker compose down`은 DB 컨테이너를 종료하지만 볼륨의 회원 데이터는 보존합니다. DB 비밀번호는 볼륨 최초 생성 시 적용되므로, 이미 생성한 DB의 비밀번호를 변경하려면 MySQL에서도 변경해야 합니다.
+
+### 이미 설치된 MySQL 사용
+
+기존 MySQL을 사용한다면 Docker 실행을 생략하고, 관리자 계정으로 데이터베이스와 앱 계정을 준비합니다. 비밀번호 예시는 실제 값으로 바꿉니다.
+
+```sql
+CREATE DATABASE IF NOT EXISTS easyton CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_as_cs;
+CREATE USER 'easyton'@'localhost' IDENTIFIED BY 'your-db-password';
+GRANT SELECT, INSERT, CREATE ON easyton.* TO 'easyton'@'localhost';
+```
+
+앱 계정이 이미 있다면 `CREATE USER`를 생략합니다. 실행할 터미널 또는 IDE 실행 설정에 아래 환경변수를 설정합니다.
+
+```sh
+export DB_URL='jdbc:mysql://localhost:3306/easyton?connectionTimeZone=UTC&characterEncoding=UTF-8'
+export DB_USERNAME='easyton'
+export DB_PASSWORD='your-db-password'
+./gradlew bootRun
+```
+
+### 회원가입 동작
+
+`/signup.html`에서 이름, 이메일, 비밀번호, 비밀번호 확인을 입력하면 `POST /api/auth/signup`으로 저장합니다.
+이메일 앞뒤 공백과 대소문자를 정규화하고, 같은 이메일은 DB의 UNIQUE 제약으로 중복 가입을 막습니다.
+서버에서도 이름(1~40자), 이메일(최대 254자), 비밀번호(8~128자), 비밀번호 일치를 검사합니다.
+비밀번호는 Spring Security의 PBKDF2 해시와 무작위 salt로 저장하며 API 응답에 원문이나 해시를 포함하지 않습니다.
+가입 성공 시 화면에 완료 메시지가 표시됩니다. 로그인·세션·이메일 인증은 아직 구현하지 않았습니다. 기존 서비스는 계속 로그인 없이 사용할 수 있습니다.
 
 ## 테스트
 
@@ -23,8 +68,12 @@ Java 21이 필요합니다. 프로젝트 루트에서 실행합니다.
 ./gradlew test
 ```
 
-컨텍스트 로딩과 지원사업 매칭 판정, JSON 날짜 형식을 확인합니다.
+테스트는 기본적으로 H2 메모리 DB를 사용하므로 MySQL이나 `DB_PASSWORD` 없이 실행할 수 있습니다.
+컨텍스트 로딩, 기존 API, 회원가입 저장·해시 검증·이메일 중복·잘못된 입력·비밀번호 길이 경계를 확인합니다.
 결과 보고서는 `build/reports/tests/test/index.html`에서 확인합니다.
+
+별도 MySQL에서 같은 테스트를 실행하려면 `TEST_DB_URL`, `TEST_DB_USERNAME`, `TEST_DB_PASSWORD`를 설정하고 `./gradlew test --rerun-tasks`를 실행합니다.
+**회원가입 테스트는 매 테스트 전에 `app_users`를 비우므로 반드시 테스트 전용 DB를 사용합니다.**
 
 ## 팀 공통 규약
 
