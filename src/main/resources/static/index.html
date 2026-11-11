@@ -9,30 +9,28 @@
     <script src="/js/ui.js" defer></script>
     <script src="/js/index.js" defer></script>
 </head>
-<body>
+<body class="portal home-page">
     <header><nav aria-label="공통 메뉴">
-        <a href="/index.html">홈</a>
+        <a class="site-name" href="/index.html">청년 지원사업 도우미</a>
         <a href="/support.html">지원사업 추천</a>
         <a href="/calendar.html">캘린더</a>
     </nav></header>
-    <main>
-        <section class="hero">
+    <main id="main">
+        <section class="intro">
             <h1>청년 지원사업 도우미</h1>
-            <p>내 정보를 입력하면 조건에 맞는 지원사업을 찾아 주고, 신청 마감일과 내 일정을 캘린더로 정리해 드립니다.</p>
+            <p>나이와 지역에 맞는 지원사업을 찾고, 신청 마감일을 내 일정에 저장하세요.</p>
             <div class="row">
-                <a class="btn" href="/support.html">지원사업 추천 받기</a>
-                <a class="btn ghost" href="/calendar.html">캘린더 보기</a>
+                <a class="btn primary" href="/support.html">지원사업 추천 받기</a>
+                <a class="btn" href="/calendar.html">내 일정 보기</a>
             </div>
         </section>
-        <h2>진행 순서</h2>
-        <ol class="steps" id="steps"></ol>
-        <div class="grid">
+        <div class="home-overview">
             <section class="card" aria-labelledby="summary-title">
-                <h2 id="summary-title">추천 결과</h2>
+                <div class="section-heading"><h2 id="summary-title">내 추천 결과</h2><a href="/support.html">전체 보기</a></div>
                 <div id="summary"></div>
             </section>
             <section class="card" aria-labelledby="upcoming-title">
-                <h2 id="upcoming-title">다가오는 일정</h2>
+                <div class="section-heading"><h2 id="upcoming-title">다가오는 일정</h2><a href="/calendar.html">캘린더</a></div>
                 <div id="upcoming"></div>
             </section>
         </div>
