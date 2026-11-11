@@ -13,7 +13,7 @@ public class SupportController {
         this.matcher = matcher;
     }
 
-    /** 프로필과 계약 정보를 가상 사업 조건과 비교해 판정 목록을 반환한다. */
+    /** 프로필을 가상 사업 조건과 비교해 판정 목록을 반환한다. */
     @PostMapping("/match")
     public List<SupportMatch> match(@RequestBody MatchRequest request) {
         return matcher.match(request);

@@ -1,10 +1,9 @@
 "use strict";
 
-/** 공통 계약 데이터와 리포트, 일정의 저장 및 API 호출 도구를 제공한다. */
+/** 일정, 프로필, 추천 결과의 저장 및 API 호출 도구를 제공한다. */
 window.Easyton = (() => {
     const keys = Object.freeze({
-        contract: "easyton.contractInfo", report: "easyton.checkReport", events: "easyton.calendarEvents",
-        profile: "easyton.userProfile", matches: "easyton.supportMatches"
+        events: "easyton.calendarEvents", profile: "easyton.userProfile", matches: "easyton.supportMatches"
     });
 
     /** 값을 JSON으로 저장한다. null이면 저장 값을 삭제하며 저장소 오류는 호출자에게 전달한다. */
@@ -21,14 +20,6 @@ window.Easyton = (() => {
         catch { return fallback; }
     }
 
-    /** ContractInfo를 저장하며 미기재 필드의 null을 그대로 유지한다. */
-    function saveContractInfo(value) { save(keys.contract, value); }
-    /** 저장된 ContractInfo를 반환하며 미저장 상태는 null이다. */
-    function getContractInfo() { return load(keys.contract); }
-    /** CheckReport를 저장한다. */
-    function saveCheckReport(value) { save(keys.report, value); }
-    /** 저장된 CheckReport를 반환하며 미저장 상태는 null이다. */
-    function getCheckReport() { return load(keys.report); }
     /** CalendarEvent 배열을 저장한다. */
     function saveCalendarEvents(value) { save(keys.events, value); }
     /** 저장된 CalendarEvent 배열을 반환하며 미저장 상태는 빈 배열이다. */
@@ -57,15 +48,6 @@ window.Easyton = (() => {
         });
     }
 
-    /** 파일 또는 텍스트를 multipart로 전송한다. boundary는 브라우저가 지정한다. */
-    function extractContract({ file = null, text = null } = {}) {
-        const body = new FormData();
-        if (file !== null) body.append("file", file);
-        if (text !== null) body.append("text", text);
-        return apiFetch("/api/contracts/extract", { method: "POST", body });
-    }
-
-    return Object.freeze({ saveContractInfo, getContractInfo, saveCheckReport, getCheckReport,
-        saveCalendarEvents, getCalendarEvents, saveUserProfile, getUserProfile,
-        saveSupportMatches, getSupportMatches, apiFetch, postJson, extractContract });
+    return Object.freeze({ saveCalendarEvents, getCalendarEvents, saveUserProfile, getUserProfile,
+        saveSupportMatches, getSupportMatches, apiFetch, postJson });
 })();

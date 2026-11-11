@@ -1,12 +1,9 @@
 package com.example.demo.support;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -20,15 +17,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class SupportControllerTests {
     @Autowired MockMvc mvc;
 
-    /** 지정 번호 샘플 JSON을 UTF-8로 읽으며 스트림을 닫는다. */
-    private String sample(int number) throws IOException {
-        try (var stream = new ClassPathResource("samples/contract" + number + ".json").getInputStream()) {
-            return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
-        }
-    }
-
-    private String request(String profile) throws IOException {
-        return "{\"profile\":" + profile + ",\"contract\":" + sample(1) + "}";
+    private String request(String profile) {
+        return "{\"profile\":" + profile + "}";
     }
 
     /** 모르는 값이 있는 조건은 확인 필요로, 충족한 사업은 가능으로 먼저 정렬되는지 확인한다. */
