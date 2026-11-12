@@ -1,58 +1,85 @@
 package com.example.demo.support;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
 /**
- * 가상 지원사업 목록과 프로필을 조건별로 비교한다.
- * 모든 사업·기관·조건·일정은 화면 시연용 가상 데이터이며 실제 제도가 아니다.
+ * 지원사업 목록({@link SupportProgramSource})과 프로필을 조건별로 비교한다.
  */
 @Component
 public class SupportMatcher {
+    private final SupportProgramSource source;
+
+    public SupportMatcher(SupportProgramSource source) {
+        this.source = source;
+    }
+
     /** 소득 구간 선택지. 뒤로 갈수록 소득이 높다. 이 밖의 값(미확인 등)은 확인 필요로 본다. */
     public static final List<String> INCOME_LEVELS =
             List.of("중위소득 50% 이하", "중위소득 100% 이하", "중위소득 150% 이하", "중위소득 150% 초과");
 
-    /** 가상 사업 한 건의 조건. null인 조건은 제한이 없다는 뜻이다. */
-    record Program(String id, String name, String organization, Integer minAge, Integer maxAge, String sido,
-                   List<String> statuses, List<String> housings, String maxIncomeLevel,
-                   LocalDate applyStart, LocalDate applyEnd, String applyUrl, List<String> documents) {}
+    /** 응답에 담는 최대 건수. 실제 사업은 수천 건이라 판정 순서대로 상위만 돌려준다. */
+    public static final int MAX_RESULTS = 50;
 
-    static final List<Program> PROGRAMS = List.of(
-            new Program("support-example-a", "예시 청년 교통비 지원", "가상청년센터", 19, 34, null,
-                    null, null, null,
-                    LocalDate.of(2026, 11, 1), LocalDate.of(2026, 11, 30), "https://example.com/support-a",
-                    List.of("예시 신청서")),
-            new Program("support-example-b", "예시 대학생 장학 지원", "가상지원재단", null, null, null,
-                    List.of("대학생"), null, "중위소득 100% 이하",
-                    LocalDate.of(2026, 12, 1), LocalDate.of(2026, 12, 31), "https://example.com/support-b",
-                    List.of("예시 신청서", "재학증명서", "소득 확인서")),
-            new Program("support-example-c", "예시 청년 월세 지원", "가상주거지원센터", 19, 34, null,
-                    null, List.of("월세"), "중위소득 150% 이하",
-                    LocalDate.of(2026, 11, 15), LocalDate.of(2026, 12, 15), "https://example.com/support-c",
-                    List.of("예시 신청서", "임대차계약서 사본", "소득 확인서")),
-            new Program("support-example-d", "예시 가상시 청년 상담 지원", "가상시청", 15, 39, "가상시",
-                    null, null, null,
-                    LocalDate.of(2026, 11, 1), LocalDate.of(2027, 1, 31), "https://example.com/support-d",
-                    List.of("예시 신청서")),
-            new Program("support-example-e", "예시 청년 생활안정 지원", "가상생활지원단", null, null, null,
-                    List.of("대학생", "구직자", "재직자"), null, "중위소득 100% 이하",
-                    LocalDate.of(2026, 12, 1), LocalDate.of(2027, 1, 15), "https://example.com/support-e",
-                    List.of("예시 신청서", "소득 확인서")));
-
-    /** 사업마다 판정하고 가능, 확인 필요, 불가 순으로 정렬한다. */
+    /** 사업마다 판정하고 상위 {@link #MAX_RESULTS}건을 돌려준다. */
     public List<SupportMatch> match(MatchRequest request) {
         UserProfile profile = request == null ? null : request.profile();
+        SupportProgramSource.Catalog catalog = source.catalog();
         List<SupportMatch> matches = new ArrayList<>();
-        for (Program program : PROGRAMS) matches.add(evaluate(program, profile));
-        matches.sort(Comparator.comparingInt(match -> match.verdict().ordinal()));
-        return matches;
+        String category = request == null ? null : text(request.category());
+        String sido = profile == null ? null : text(profile.sido());
+        for (SupportProgram program : catalog.programs()) {
+            if (!regionMatches(program, sido, catalog.sample())) continue;
+            if (category != null && program.categories().stream()
+                    .noneMatch(value -> categoryKey(value).equals(categoryKey(category)))) continue;
+            matches.add(evaluate(program, profile, catalog.sample()));
+        }
+        // 가능, 확인 필요, 불가 순으로, 같은 판정 안에서는 마감이 가까운 사업을 먼저(마감일을 모르면 뒤로) 둔다.
+        matches.sort(Comparator.<SupportMatch>comparingInt(match -> match.verdict().ordinal())
+                .thenComparing(SupportMatch::applyEnd, Comparator.nullsLast(Comparator.naturalOrder())));
+        return matches.size() > MAX_RESULTS ? List.copyOf(matches.subList(0, MAX_RESULTS)) : matches;
     }
 
-    private SupportMatch evaluate(Program p, UserProfile profile) {
+    private static final java.util.Map<String,String> REGIONS = java.util.Map.ofEntries(
+            java.util.Map.entry("서울특별시", "11"),
+            java.util.Map.entry("부산광역시", "26"),
+            java.util.Map.entry("대구광역시", "27"),
+            java.util.Map.entry("인천광역시", "28"),
+            java.util.Map.entry("광주광역시", "29"),
+            java.util.Map.entry("대전광역시", "30"),
+            java.util.Map.entry("울산광역시", "31"),
+            java.util.Map.entry("세종특별자치시", "36"),
+            java.util.Map.entry("경기도", "41"),
+            java.util.Map.entry("강원특별자치도", "51"),
+            java.util.Map.entry("충청북도", "43"),
+            java.util.Map.entry("충청남도", "44"),
+            java.util.Map.entry("전북특별자치도", "52"),
+            java.util.Map.entry("전라남도", "46"),
+            java.util.Map.entry("경상북도", "47"),
+            java.util.Map.entry("경상남도", "48"),
+            java.util.Map.entry("제주특별자치도", "50"));
+    private static String categoryKey(String value) {
+        return switch (value.replaceAll("[·･ㆍ ]", "")) {
+            case "금융복지문화" -> "복지문화";
+            case "교육직업훈련" -> "교육";
+            case "참여기반" -> "참여권리";
+            default -> value.strip();
+        };
+    }
+
+    private static boolean regionMatches(SupportProgram p, String sido, boolean sample) {
+        if (sido == null) return true;
+        if (sample) return p.sido() == null || p.sido().equals(sido);
+        String prefix = REGIONS.get(sido);
+        return p.regionCodes().stream().anyMatch(code -> code.equals("00000") || code.equals("00")
+                || prefix != null && (code.startsWith(prefix)
+                || prefix.equals("51") && code.startsWith("42")
+                || prefix.equals("52") && code.startsWith("45")));
+    }
+
+    private SupportMatch evaluate(SupportProgram p, UserProfile profile, boolean sample) {
         List<String> failed = new ArrayList<>();
         List<String> unknown = new ArrayList<>();
         List<String> passed = new ArrayList<>();
@@ -86,6 +113,8 @@ public class SupportMatcher {
             } else passed.add("가구 소득");
         }
 
+        unknown.addAll(p.unverified());
+
         MatchVerdict verdict;
         String reason;
         if (!failed.isEmpty()) {
@@ -99,8 +128,8 @@ public class SupportMatcher {
             reason = passed.isEmpty() ? "별도 조건이 없습니다."
                     : String.join(", ", passed) + " 조건을 충족합니다.";
         }
-        return new SupportMatch(p.id(), p.name(), p.organization(), verdict, "[가상 예시] " + reason,
-                p.applyStart(), p.applyEnd(), p.applyUrl(), p.documents());
+        return new SupportMatch(p.id(), p.name(), p.organization(), verdict, (sample ? "[가상 예시] " : "") + reason,
+                p.applyStart(), p.applyEnd(), p.applyUrl(), p.documents(), sample);
     }
 
     private static void check(List<String> allowed, String value, String name,
