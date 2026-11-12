@@ -1,0 +1,67 @@
+.region-map {
+    --map-primary: #9b3f3f;
+    --map-accent: #c69a33;
+    --map-motion: 700ms cubic-bezier(.22, .68, .22, 1);
+    display: block;
+    min-width: 0;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    margin: 0 auto;
+    color: #352a28;
+}
+.region-map__viewport {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    border: 1px solid #e7ddd1;
+    border-radius: 18px;
+    background: radial-gradient(ellipse at 50% 38%, #ffffff 10%, #fffcf4 82%);
+    isolation: isolate;
+}
+.region-map__svg { display: block; width: 100%; height: 100%; }
+.region-map__world,
+.region-map__marker {
+    transform-box: view-box;
+    transform-origin: 0 0;
+    transition: transform var(--map-motion);
+}
+.region-map__province {
+    fill: #eee8df;
+    stroke: #b8aaa0;
+    stroke-width: .8;
+    stroke-linejoin: round;
+    transition: fill 240ms ease, stroke 240ms ease, opacity 240ms ease;
+    pointer-events: none;
+}
+.region-map__province.is-selected { fill: #9b3f3f2e; stroke: var(--map-primary); stroke-width: 1.5; }
+.region-map--focused .region-map__province:not(.is-selected) { opacity: .48; }
+.region-map__district {
+    fill: #fff8e9;
+    stroke: #c7b7a4;
+    stroke-width: .75;
+    stroke-linejoin: round;
+    transition: fill 240ms ease, stroke 240ms ease;
+    pointer-events: none;
+}
+.region-map__district.is-selected { fill: #c69a3366; stroke: var(--map-primary); stroke-width: 2; }
+.region-map .is-interactive { cursor: pointer; pointer-events: fill; }
+.region-map__province.is-interactive:hover { fill: #f1d8ce; stroke: var(--map-primary); }
+.region-map__district.is-interactive:hover { fill: #ecd6a6; stroke: var(--map-primary); }
+.region-map .is-interactive:focus-visible {
+    outline: none;
+    fill: #e8cd96;
+    stroke: var(--map-primary);
+    stroke-width: 2.5;
+}
+.region-map__outline { fill: none; stroke: var(--map-primary); stroke-width: 1.7; stroke-linejoin: round; pointer-events: none; }
+.region-map__marker { pointer-events: none; }
+.region-map__marker path { fill: var(--map-primary); stroke: #fff; stroke-width: 4; }
+.region-map__marker circle { fill: #fff4cf; }
+@media (prefers-reduced-motion: reduce) {
+    .region-map__world,
+    .region-map__marker,
+    .region-map__province,
+    .region-map__district { transition: none; }
+}

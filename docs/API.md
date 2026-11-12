@@ -128,7 +128,7 @@ type은 SUPPORT_DEADLINE(추천 결과에서 추가), TODO, CUSTOM(캘린더에�
 
 ## 프런트 공통 도구
 
-모든 화면에서 `/js/common.js`, `/js/ui.js`, 화면별 `/js/<화면>.js`를 순서대로 불러온다. 외부 라이브러리는 없다.
+모든 화면에서 `/js/common.js`, `/js/ui.js`, 화면별 `/js/<화면>.js`를 순서대로 불러온다. 지원사업 추천은 `frontend/support/`의 React 소스를 빌드한 `/js/support.js`를 사용하며 API·localStorage 계약은 동일하다. 빌드 명령은 README를 참고한다.
 `window.Easyton`의 함수는 다음과 같다.
 
 | 함수 | 동작 |

@@ -5,13 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>지원사업 추천 | 알바 첫걸음</title>
     <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/support.css">
+    <link rel="stylesheet" href="/css/support-map.css">
     <link rel="icon" href="/images/logo-b2-mark.svg" type="image/svg+xml">
     <meta name="theme-color" content="#9B3F3F">
     <script src="/js/common.js" defer></script>
     <script src="/js/ui.js" defer></script>
     <script src="/js/support.js" defer></script>
 </head>
-<body>
+<body class="support-page">
     <header class="site-header"><nav aria-label="공통 메뉴">
         <a class="site-name" href="/index.html" aria-label="알바 첫걸음 홈"><img class="site-logo" src="/images/logo-b2.svg" alt="알바 첫걸음" width="220" height="48"></a>
         <a href="/upload.html">계약서 점검</a>
@@ -19,47 +21,15 @@
         <a href="/calendar.html">캘린더</a>
         <a href="/signin.html">로그인</a>
     </nav></header>
-    <main>
-        <h1>지원사업 추천</h1>
-        <p class="lead">내 정보에 맞는 지원사업을 찾아봅니다.</p>
-        <form id="profile-form" class="card stack" style="margin-top:16px">
-            <h2>내 정보</h2>
-            <div class="form-grid">
-                <div><label for="age">만 나이</label><input id="age" type="number" min="0" max="120" step="1" inputmode="numeric"></div>
-                <div>
-                    <label for="sido">거주 시·도</label>
-                    <input id="sido" type="text" list="sido-list" autocomplete="off">
-                    <datalist id="sido-list"></datalist>
-                </div>
-                <div><label for="sigungu">시·군·구</label><input id="sigungu" type="text"></div>
-                <div>
-                    <label for="status">현재 상태</label>
-                    <select id="status">
-                        <option value="">선택 안 함</option>
-                        <option>대학생</option><option>구직자</option><option>재직자</option><option>기타</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="housing">거주 형태</label>
-                    <select id="housing">
-                        <option value="">선택 안 함</option>
-                        <option>월세</option><option>전세</option><option>자가</option><option>가족과 거주</option><option>기숙사·기타</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="householdIncomeLevel">가구 소득</label>
-                    <select id="householdIncomeLevel">
-                        <option value="">선택 안 함</option>
-                        <option>중위소득 50% 이하</option><option>중위소득 100% 이하</option>
-                        <option>중위소득 150% 이하</option><option>중위소득 150% 초과</option><option>미확인</option>
-                    </select>
-                </div>
-            </div>
-            <div id="message" class="notice" role="alert" hidden></div>
-            <div class="row end"><button type="submit" class="btn primary" id="submit">추천 받기</button></div>
-        </form>
-        <div id="results" aria-live="polite"></div>
+    <main id="support-root">
+        <p role="status">추천 화면을 준비하고 있어요…</p>
+        <noscript><p class="notice warn">지원사업 추천을 이용하려면 자바스크립트를 켜 주세요.</p></noscript>
     </main>
-    <footer>Made by RE: 지원 Corporation</footer>
+    <footer>
+        <p class="support-map-credit">지도 데이터: <a href="https://sgis.kostat.go.kr" target="_blank" rel="noopener noreferrer">SGIS</a> ·
+            <a href="https://github.com/vuski/admdongkor" target="_blank" rel="noopener noreferrer">admdongkor</a> · 2026.04 ·
+            <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a> (경계 단순화·지도 변환)</p>
+        <p class="support-copyright">Made by RE: 지원 Corporation</p>
+    </footer>
 </body>
 </html>
