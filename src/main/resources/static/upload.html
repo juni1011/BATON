@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>계약서 업로드 | 알바 첫걸음</title>
     <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/upload.css">
     <link rel="icon" href="/images/logo-b2-mark.svg" type="image/svg+xml">
     <meta name="theme-color" content="#9B3F3F">
     <script src="/js/common.js" defer></script>
@@ -12,25 +13,53 @@
     <script src="/js/upload.js" defer></script>
 </head>
 <body>
-    <header class="site-header"><nav aria-label="공통 메뉴">
-        <a class="site-name" href="/index.html" aria-label="알바 첫걸음 홈"><img class="site-logo" src="/images/logo-b2.svg" alt="알바 첫걸음" width="220" height="48"></a>
-        <a href="/upload.html">계약서 점검</a>
-        <a href="/support.html">지원사업 추천</a>
-        <a href="/calendar.html">캘린더</a>
-    </nav></header>
+    <header class="site-header">
+        <div class="site-account">
+            <nav class="account-nav" aria-label="계정 메뉴">
+                <a href="/signin.html">로그인</a>
+                <a href="/signup.html">회원가입</a>
+            </nav>
+        </div>
+        <nav class="primary-nav" aria-label="공통 메뉴">
+            <a class="site-name" href="/index.html" aria-label="알바 첫걸음 홈"><img class="site-logo" src="/images/logo-b2.svg" alt="알바 첫걸음" width="220" height="48"></a>
+            <a href="/upload.html">계약서 점검</a>
+            <a href="/support.html">지원사업 추천</a>
+            <a href="/calendar.html">캘린더</a>
+        </nav>
+    </header>
     <main>
         <h1>계약서 업로드</h1>
         <p class="lead">계약서 텍스트 파일을 올리거나 내용을 붙여넣으면 주요 항목을 자동으로 찾아 드립니다.</p>
-        <div class="row card">
-            <div>
-                <label for="sample">가상 계약서 샘플</label>
-                <select id="sample">
-                    <option value="1">정상 계약서</option>
-                    <option value="2">낮은 시급·주휴수당 미기재</option>
-                    <option value="3">위약금·항목 누락</option>
-                </select>
+        <div class="row card sample-card">
+            <div class="sample-picker" id="sample-picker">
+                <span class="label" id="sample-label">가상 계약서 샘플</span>
+                <input type="hidden" id="sample" value="1">
+                <button type="button" class="sample-trigger" id="sample-toggle" aria-haspopup="listbox"
+                    aria-expanded="false" aria-controls="sample-options" aria-labelledby="sample-label sample-current">
+                    <span id="sample-current">정상 계약서</span><span aria-hidden="true">⌄</span>
+                </button>
+                <div id="sample-popover" class="sample-popover" hidden>
+                    <div id="sample-options" class="sample-options" role="listbox" aria-labelledby="sample-label">
+                        <button type="button" class="sample-option" role="option" data-sample="1" aria-selected="true" tabindex="0">
+                            <span class="sample-check" aria-hidden="true">✓</span><span class="sample-option-label">정상 계약서</span>
+                        </button>
+                        <button type="button" class="sample-option" role="option" data-sample="2" aria-selected="false" tabindex="-1">
+                            <span class="sample-check" aria-hidden="true">✓</span><span class="sample-option-label">낮은 시급·주휴수당 미기재</span>
+                        </button>
+                        <button type="button" class="sample-option" role="option" data-sample="3" aria-selected="false" tabindex="-1">
+                            <span class="sample-check" aria-hidden="true">✓</span><span class="sample-option-label">위약금·항목 누락</span>
+                        </button>
+                    </div>
+                    <aside id="sample-preview" class="sample-preview" role="region" aria-labelledby="sample-preview-title" hidden>
+                        <div class="row between">
+                            <h2 id="sample-preview-title">계약서 미리보기</h2>
+                            <button type="button" class="btn small sample-preview-close" id="sample-preview-close" aria-label="샘플 미리보기 닫기">×</button>
+                        </div>
+                        <p id="sample-preview-status" class="hint" role="status" aria-live="polite"></p>
+                        <pre id="sample-preview-text" class="sample-preview-text" tabindex="0" aria-label="샘플 계약서 내용"></pre>
+                    </aside>
+                </div>
             </div>
-            <button type="button" class="btn small" id="example">샘플 불러오기</button>
         </div>
         <form id="upload-form" class="card stack">
             <div>
