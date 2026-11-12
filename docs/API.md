@@ -51,6 +51,19 @@ DB 연결 설정과 로컬 실행 방법은 [README.md](../README.md)를 참고�
 - `GET /api/auth/me` → 로그인 상태면 `200 {"id","name","email"}`, 아니면 `401`.
 - `POST /api/auth/signout` → `204`, 세션을 무효화한다.
 
+## 계정별 데이터 저장 (로그인 필요)
+
+로그인하면 화면 데이터가 계정에 저장되어 다른 브라우저에서도 이어서 쓸 수 있다. 비로그인 상태는 기존처럼 localStorage에만 저장한다.
+키는 `contract`, `report`, `events`, `profile`, `matches`만 허용하며 값은 임의의 JSON(최대 약 1MB)이다.
+
+- `GET /api/me/data` → `200 {"events":[...],"profile":{...}}` (저장된 키만 포함)
+- `PUT /api/me/data/{key}` 본문은 JSON 값 → `204`. 잘못된 JSON은 400, 1MB 초과는 413.
+- `DELETE /api/me/data/{key}` → `204`
+- 로그인하지 않았으면 401, 허용하지 않는 키는 404.
+
+화면(`common.js`)은 페이지를 열 때 서버 데이터로 localStorage를 맞추고, 저장할 때 서버에도 반영한다.
+서버가 비어 있는 계정으로 처음 로그인하면 로그인 전에 이 브라우저에 저장한 데이터를 계정으로 옮기고, 로그아웃하면 이 브라우저의 계정 데이터를 지운다.
+
 ## POST /api/supports/match
 
 요청 `application/json` (MatchRequest):
