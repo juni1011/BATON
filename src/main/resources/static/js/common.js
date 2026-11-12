@@ -7,11 +7,78 @@ window.Easyton = (() => {
         profile: "easyton.userProfile", matches: "easyton.supportMatches"
     });
 
-    /** 값을 JSON으로 저장한다. null이면 저장 값을 삭제하며 저장소 오류는 호출자에게 전달한다. */
+    const OWNER_KEY = "easyton.owner";
+    /** localStorage 키 → 서버 저장 키. */
+    const serverKeys = Object.freeze(Object.fromEntries(Object.entries(keys).map(([name, key]) => [key, name])));
+
+    function owner() {
+        try { return localStorage.getItem(OWNER_KEY); } catch { return null; }
+    }
+
+    /** 로그인한 계정의 데이터를 서버에도 반영한다. 실패해도 화면 동작은 막지 않는다. */
+    function pushToServer(key, value) {
+        const name = serverKeys[key];
+        if (!name || owner() === null) return;
+        fetch(`/api/me/data/${name}`, value === null
+            ? { method: "DELETE", keepalive: true }
+            : { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(value), keepalive: true })
+            .catch(() => { /* 다음 저장 때 다시 시도된다 */ });
+    }
+
+    /** 값을 JSON으로 저장한다. null이면 저장 값을 삭제하며 저장소 오류는 호출자에게 전달한다. 로그인 중이면 서버에도 저장한다. */
     function save(key, value) {
         if (value === null) localStorage.removeItem(key);
         else localStorage.setItem(key, JSON.stringify(value));
+        pushToServer(key, value);
     }
+
+    /** 이 브라우저에 남은 계정 데이터를 지운다(로그아웃, 세션 만료 시). */
+    function clearLocal() {
+        for (const key of Object.values(keys)) localStorage.removeItem(key);
+        localStorage.removeItem(OWNER_KEY);
+    }
+
+    /**
+     * 페이지 스크립트가 localStorage를 읽기 전에 계정 데이터를 맞춘다. 동기 요청이라 로컬 서버의 작은 응답만 기다린다.
+     * - 로그인 중: 서버 데이터로 덮어쓴다. 서버가 비어 있으면 로그인 전에 쓰던 이 브라우저 데이터를 계정으로 옮긴다.
+     * - 로그아웃 상태인데 이전 계정 데이터가 남아 있으면 지운다.
+     * - 서버에 연결할 수 없으면 아무것도 바꾸지 않는다.
+     */
+    function syncWithAccount() {
+        try {
+            const me = new XMLHttpRequest();
+            me.open("GET", "/api/auth/me", false);
+            me.send();
+            if (me.status === 401) {
+                if (owner() !== null) clearLocal();
+                return;
+            }
+            if (me.status !== 200) return;
+            const user = JSON.parse(me.responseText);
+            const data = new XMLHttpRequest();
+            data.open("GET", "/api/me/data", false);
+            data.send();
+            if (data.status !== 200) return;
+            const remote = JSON.parse(data.responseText);
+            const previousOwner = owner();
+            const adopt = previousOwner === null && Object.keys(remote).length === 0;
+            const pending = [];
+            for (const [key, name] of Object.entries(serverKeys)) {
+                if (adopt) {
+                    const raw = localStorage.getItem(key);
+                    if (raw !== null) pending.push([name, raw]);
+                } else if (name in remote) localStorage.setItem(key, JSON.stringify(remote[name]));
+                else localStorage.removeItem(key);
+            }
+            localStorage.setItem(OWNER_KEY, String(user.id));
+            for (const [name, raw] of pending) {
+                fetch(`/api/me/data/${name}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: raw })
+                    .catch(() => { /* 다음 저장 때 다시 시도된다 */ });
+            }
+        } catch { /* 저장소나 네트워크 오류 시 기존 동작을 유지한다 */ }
+    }
+
+    syncWithAccount();
 
     /** 저장 값을 조회한다. 미저장 또는 손상된 JSON이면 기본값을 반환한다. */
     function load(key, fallback = null) {
@@ -67,5 +134,5 @@ window.Easyton = (() => {
 
     return Object.freeze({ saveContractInfo, getContractInfo, saveCheckReport, getCheckReport,
         saveCalendarEvents, getCalendarEvents, saveUserProfile, getUserProfile,
-        saveSupportMatches, getSupportMatches, apiFetch, postJson, extractContract });
+        saveSupportMatches, getSupportMatches, clearLocal, apiFetch, postJson, extractContract });
 })();
