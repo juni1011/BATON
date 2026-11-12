@@ -31,7 +31,8 @@ public class ContractController {
     /**
      * 파일이 있으면 파일을, 없으면 text를 읽는다. 둘 다 비어 있으면 400이다.
      * PNG·JPEG·WEBP·GIF 사진은 Codex로 분석하며, 사진이 외부 AI로 전송되므로 {@code consent=true}가 없으면 400이다.
-     * 그 밖의 텍스트가 아닌 파일(PDF 등)은 415를 돌려준다.
+     * 텍스트는 기본적으로 규칙으로 읽고, {@code consent=true}를 주면 Codex로 읽는다(문장형 계약서용).
+     * AI 분석이 실패하면 규칙 결과로 바꿔치지 않고 오류를 돌려준다. 그 밖의 텍스트가 아닌 파일(PDF 등)은 415를 돌려준다.
      */
     @PostMapping("/extract")
     public ContractInfo extract(@RequestParam(name = "file", required = false) MultipartFile file,
@@ -64,6 +65,7 @@ public class ContractController {
         if (source == null || source.isBlank()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "계약서 파일 또는 텍스트가 필요합니다.");
         }
+        if (Boolean.TRUE.equals(consent)) return imageAnalyzer.analyzeText(source);
         return parser.parse(source);
     }
 

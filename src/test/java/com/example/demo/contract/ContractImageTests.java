@@ -41,12 +41,19 @@ class ContractImageTests {
                       case "$1" in -o) out="$2"; shift;; -i) img="$2"; shift;; esac
                       shift
                     done
-                    [ -f "$img" ] || exit 3
-                    grep -q "" /dev/stdin || exit 4
-                    if grep -aq FAILCASE "$img"; then exit 1; fi
-                    if grep -aq BADJSON "$img"; then echo '{oops' > "$out"; exit 0; fi
+                    in=$(mktemp); cat > "$in"
+                    [ -s "$in" ] || exit 4
+                    if [ -n "$img" ]; then
+                      [ -f "$img" ] || exit 3
+                      src="$img"
+                    else
+                      grep -q "<contract>" "$in" || exit 5
+                      src="$in"
+                    fi
+                    if grep -aq FAILCASE "$src"; then exit 1; fi
+                    if grep -aq BADJSON "$src"; then echo '{oops' > "$out"; exit 0; fi
                     wage=15000
-                    if grep -aq HUGEWAGE "$img"; then wage=99999999; fi
+                    if grep -aq HUGEWAGE "$src"; then wage=99999999; fi
                     cat > "$out" <<EOF
                     %s
                     EOF
@@ -114,6 +121,27 @@ class ContractImageTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.hourlyWage").doesNotExist())
                 .andExpect(jsonPath("$.employerName").value("가상상점"));
+    }
+
+    @Test
+    void proseTextIsAnalyzedByAiOnlyWithConsent() throws Exception {
+        String prose = "근로개시일 2026년 11월 1일부터. 시간급 15,000원을 지급한다. OK";
+        mvc.perform(multipart("/api/contracts/extract").param("text", prose).param("consent", "true"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.hourlyWage").value(15000))
+                .andExpect(jsonPath("$.employerName").value("가상상점"));
+        // 동의하지 않으면 AI가 아니라 규칙 파서가 읽는다(가짜 codex의 값이 나오지 않는다).
+        mvc.perform(multipart("/api/contracts/extract").param("text", prose))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.employerName").doesNotExist());
+    }
+
+    @Test
+    void aiFailureOnTextIsReportedInsteadOfSilentlyFallingBack() throws Exception {
+        mvc.perform(multipart("/api/contracts/extract").param("text", "계약서 FAILCASE").param("consent", "true"))
+                .andExpect(status().isBadGateway());
+        mvc.perform(multipart("/api/contracts/extract").param("text", "x".repeat(ContractImageAnalyzer.MAX_TEXT_CHARS + 1))
+                .param("consent", "true")).andExpect(status().isPayloadTooLarge());
     }
 
     @Test

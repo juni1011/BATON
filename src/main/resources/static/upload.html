@@ -67,9 +67,9 @@
                 <input type="file" id="file" accept=".txt,text/plain,image/png,image/jpeg,image/webp,image/gif">
                 <p class="hint">텍스트 파일(.txt)이나 사진(PNG·JPG·WEBP·GIF, 10MB 이하)을 올릴 수 있어요. PDF는 읽지 못하니 내용을 붙여넣어 주세요.</p>
             </div>
-            <div id="image-consent" hidden>
-                <label class="check"><input type="checkbox" id="consent"> 사진이 AI(Codex)로 전송되어 분석되는 것에 동의합니다.</label>
-                <p class="hint">사진에 주민등록번호·전화번호·계좌번호가 보이면 가린 뒤 올려 주세요. 분석에는 수십 초가 걸릴 수 있고, 사진은 분석이 끝나면 서버에서 바로 지워집니다.</p>
+            <div id="image-consent">
+                <label class="check"><input type="checkbox" id="consent"> AI(Codex)로 계약서를 읽어 항목을 자동으로 채우기</label>
+                <p class="hint">체크하면 올린 사진과 붙여넣은 내용이 AI로 전송됩니다. 사진은 반드시 체크해야 하고, "소정근로시간: 오전 10시부터 오후 3시까지"처럼 문장으로 쓴 계약서도 체크하면 정확하게 읽어요. 체크하지 않으면 "근무 시간: 14:00 ~ 18:30"처럼 줄마다 항목이 적힌 형식만 읽습니다. 주민등록번호·전화번호·계좌번호는 가린 뒤 올려 주세요. 분석에는 수십 초가 걸릴 수 있고 사진은 끝나면 서버에서 바로 지워집니다.</p>
             </div>
             <div>
                 <div class="row between">
