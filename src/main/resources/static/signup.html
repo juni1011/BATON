@@ -153,8 +153,7 @@
                     form.reset();
                     password.type = "password";
                     confirmation.type = "password";
-                    message.className = "notice";
-                    message.textContent = "회원가입이 완료되었습니다. 알바 첫걸음에 오신 것을 환영합니다.";
+                    location.assign("/signin.html?signup=success");
                 } catch (error) {
                     message.className = "notice warn";
                     message.textContent = error instanceof TypeError
@@ -165,7 +164,7 @@
                     form.removeAttribute("aria-busy");
                     controls.forEach(control => { control.disabled = completed; });
                     submit.textContent = completed ? "가입 완료" : "회원가입";
-                    message.hidden = false;
+                    message.hidden = completed;
                 }
             });
 
