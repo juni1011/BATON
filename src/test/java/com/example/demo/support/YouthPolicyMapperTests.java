@@ -79,4 +79,13 @@ class YouthPolicyMapperTests {
         assertTrue(YouthPolicyMapper.map(mapper.readTree("{\"plcyNo\":\"1\",\"plcyNm\":\" \"}")).isEmpty());
         assertTrue(YouthPolicyMapper.map(mapper.readTree("{\"plcyNm\":\"이름만\"}")).isEmpty());
     }
+
+    @Test
+    void categoriesSplitCommasAndIncludeMediumCategory() throws Exception {
+        var mapper = JsonMapper.builder().build();
+        SupportProgram p = YouthPolicyMapper.map(mapper.readTree(
+                "{\"plcyNo\":\"1\",\"plcyNm\":\"x\",\"lclsfNm\":\"일자리,교육,일자리\",\"mclsfNm\":\"창업\",\"zipCd\":\"11110, 11140\"}")).orElseThrow();
+        assertEquals(List.of("일자리", "교육", "창업"), p.categories());
+        assertEquals(List.of("11110", "11140"), p.regionCodes());
+    }
 }

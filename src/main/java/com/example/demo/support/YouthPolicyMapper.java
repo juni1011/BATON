@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import tools.jackson.databind.JsonNode;
 
 /**
@@ -59,7 +60,8 @@ final class YouthPolicyMapper {
                 null, null, null, start, end,
                 firstUrl(policy, "aplyUrlAddr", "refUrlAddr1", "refUrlAddr2"),
                 documents(text(policy, "sbmsnDcmntCn")), unverified,
-                list(text(policy, "lclsfNm")), regionCodes(text(policy, "zipCd"))));
+                categories(text(policy, "lclsfNm"), text(policy, "mclsfNm")),
+                codes(text(policy, "zipCd"))));
     }
 
     /** 비어 있거나 "해당없음"이면 null. 앞뒤 공백은 제거한다. */
@@ -90,14 +92,15 @@ final class YouthPolicyMapper {
         return null;
     }
 
-    private static List<String> list(String value) {
-        return value == null ? List.of() : List.of(value);
+    /** 대분류와 중분류를 모두 분야로 쓴다(예: "일자리"와 "창업"). 여러 분류는 쉼표로 이어져 오고 중복도 있다. */
+    private static List<String> categories(String large, String medium) {
+        return Stream.concat(codes(large).stream(), codes(medium).stream()).distinct().toList();
     }
 
-    /** zipCd는 쉼표로 이어진 법정시군구코드다. 비어 있으면 지역을 알 수 없다. */
-    private static List<String> regionCodes(String text) {
+    /** 쉼표로 이어진 값을 나눈다. 법정시군구코드(zipCd)와 분류명이 이 형식이다. */
+    private static List<String> codes(String text) {
         if (text == null) return List.of();
-        return Arrays.stream(text.split(",")).map(String::strip).filter(s -> !s.isEmpty()).toList();
+        return Arrays.stream(text.split(",")).map(String::strip).filter(s -> !s.isEmpty()).distinct().toList();
     }
 
     private static List<String> documents(String text) {
