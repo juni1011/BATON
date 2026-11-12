@@ -28,11 +28,56 @@ public class SupportMatcher {
         UserProfile profile = request == null ? null : request.profile();
         SupportProgramSource.Catalog catalog = source.catalog();
         List<SupportMatch> matches = new ArrayList<>();
-        for (SupportProgram program : catalog.programs()) matches.add(evaluate(program, profile, catalog.sample()));
+        String category = request == null ? null : text(request.category());
+        String sido = profile == null ? null : text(profile.sido());
+        for (SupportProgram program : catalog.programs()) {
+            if (!regionMatches(program, sido, catalog.sample())) continue;
+            if (category != null && program.categories().stream()
+                    .noneMatch(value -> categoryKey(value).equals(categoryKey(category)))) continue;
+            matches.add(evaluate(program, profile, catalog.sample()));
+        }
         // 가능, 확인 필요, 불가 순으로, 같은 판정 안에서는 마감이 가까운 사업을 먼저(마감일을 모르면 뒤로) 둔다.
         matches.sort(Comparator.<SupportMatch>comparingInt(match -> match.verdict().ordinal())
                 .thenComparing(SupportMatch::applyEnd, Comparator.nullsLast(Comparator.naturalOrder())));
         return matches.size() > MAX_RESULTS ? List.copyOf(matches.subList(0, MAX_RESULTS)) : matches;
+    }
+
+    private static final java.util.Map<String,String> REGIONS = java.util.Map.ofEntries(
+            java.util.Map.entry("서울특별시", "11"),
+            java.util.Map.entry("부산광역시", "26"),
+            java.util.Map.entry("대구광역시", "27"),
+            java.util.Map.entry("인천광역시", "28"),
+            java.util.Map.entry("광주광역시", "29"),
+            java.util.Map.entry("대전광역시", "30"),
+            java.util.Map.entry("울산광역시", "31"),
+            java.util.Map.entry("세종특별자치시", "36"),
+            java.util.Map.entry("경기도", "41"),
+            java.util.Map.entry("강원특별자치도", "51"),
+            java.util.Map.entry("충청북도", "43"),
+            java.util.Map.entry("충청남도", "44"),
+            java.util.Map.entry("전북특별자치도", "52"),
+            java.util.Map.entry("전라남도", "46"),
+            java.util.Map.entry("경상북도", "47"),
+            java.util.Map.entry("경상남도", "48"),
+            java.util.Map.entry("제주특별자치도", "50"));
+    private static String categoryKey(String value) {
+        return switch (value.replaceAll("[·･ㆍ ]", "")) {
+            case "금융복지문화" -> "복지문화";
+            case "교육직업훈련" -> "교육";
+            case "참여기반" -> "참여권리";
+            default -> value.strip();
+        };
+    }
+
+    private static boolean regionMatches(SupportProgram p, String sido, boolean sample) {
+        if (sido == null) return true;
+        if (sample) return p.sido() == null || p.sido().equals(sido);
+        String prefix = REGIONS.get(sido);
+        if (p.regionCodes().isEmpty()) return true; // 대상 지역을 모르는 정책은 남겨 두고 상세 공고에서 확인하게 한다.
+        return p.regionCodes().stream().anyMatch(code -> code.equals("00000") || code.equals("00")
+                || prefix != null && (code.startsWith(prefix)
+                || prefix.equals("51") && code.startsWith("42")
+                || prefix.equals("52") && code.startsWith("45")));
     }
 
     private SupportMatch evaluate(SupportProgram p, UserProfile profile, boolean sample) {

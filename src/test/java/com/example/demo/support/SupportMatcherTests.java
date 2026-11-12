@@ -19,7 +19,7 @@ class SupportMatcherTests {
     }
 
     private static MatchRequest request(Integer age) {
-        return new MatchRequest(new UserProfile(age, null, null, null, null, null));
+        return new MatchRequest(new UserProfile(age, null, null, null, null, null), null);
     }
 
     @Test
