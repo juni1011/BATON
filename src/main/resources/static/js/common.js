@@ -125,9 +125,10 @@ window.Easyton = (() => {
     }
 
     /** 파일 또는 텍스트를 multipart로 전송한다. boundary는 브라우저가 지정한다. */
-    function extractContract({ file = null, text = null } = {}) {
+    function extractContract({ file = null, text = null, consent = false } = {}) {
         const body = new FormData();
         if (file !== null) body.append("file", file);
+        if (consent) body.append("consent", "true");
         if (text !== null) body.append("text", text);
         return apiFetch("/api/contracts/extract", { method: "POST", body });
     }
