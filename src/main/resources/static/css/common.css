@@ -72,7 +72,12 @@ input[type="checkbox"], input[type="radio"] { width: auto; accent-color: var(--p
 
 /* 홈과 캘린더 */
 .portal { background: var(--bg); }
-.site-header { border-top: 3px solid var(--accent); }
+.site-account { border-bottom: 3px solid var(--accent); }
+.site-header .account-nav {
+    justify-content: flex-end; gap: 4px; padding-block: 3px; font-size: 13px;
+}
+.site-header .account-nav a { padding: 4px 8px; }
+.site-header .nav-user { align-self: center; color: var(--muted); }
 .portal nav, .portal main, .site-header nav { max-width: 1160px; }
 .portal nav, .site-header nav { align-items: center; gap: 4px 14px; }
 .portal nav a, .site-header nav a { border-radius: 4px; }

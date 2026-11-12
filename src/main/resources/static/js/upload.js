@@ -9,24 +9,134 @@ document.addEventListener("DOMContentLoaded", () => {
     const message = document.getElementById("message");
     const submit = document.getElementById("submit");
 
-    const example = document.getElementById("example");
-    example.addEventListener("click", async () => {
-        const sample = document.getElementById("sample").value;
-        example.disabled = true;
-        try {
-            const response = await fetch("/api/contracts/samples/" + encodeURIComponent(sample));
-            if (!response.ok) throw new Error("HTTP " + response.status);
-            textInput.value = await response.text();
-            fileInput.value = "";
-            notify(message, "가상 계약서 샘플을 불러왔어요.");
-            textInput.focus();
-        } catch (error) {
-            notify(message, errorText(error), "error");
-        } finally {
-            example.disabled = false;
-        }
-    });
+    const picker = document.getElementById("sample-picker");
+    const sample = document.getElementById("sample");
+    const toggle = document.getElementById("sample-toggle");
+    const current = document.getElementById("sample-current");
+    const popover = document.getElementById("sample-popover");
+    const menu = document.getElementById("sample-options");
+    const options = [...menu.querySelectorAll("[data-sample]")];
+    const preview = document.getElementById("sample-preview");
+    const previewTitle = document.getElementById("sample-preview-title");
+    const previewStatus = document.getElementById("sample-preview-status");
+    const previewText = document.getElementById("sample-preview-text");
+    const sampleCache = new Map();
+    let previewSequence = 0;
+    let previewSample = null;
+    let previewFailed = false;
 
+    function sampleLabel(option) {
+        return option.querySelector(".sample-option-label").textContent;
+    }
+
+    /** 샘플 원문을 캐시하며, 실패한 요청은 다시 시도할 수 있다. */
+    function getSample(number) {
+        if (!sampleCache.has(number)) {
+            const request = fetch("/api/contracts/samples/" + encodeURIComponent(number))
+                .then(response => {
+                    if (!response.ok) throw new Error("HTTP " + response.status);
+                    return response.text();
+                })
+                .catch(error => {
+                    sampleCache.delete(number);
+                    throw error;
+                });
+            sampleCache.set(number, request);
+        }
+        return sampleCache.get(number);
+    }
+
+    /** 닫힌 창 또는 이전 항목의 늦은 응답이 현재 미리보기를 덮어쓰지 않게 한다. */
+    async function showPreview(option) {
+        if (popover.hidden) return;
+        const number = option.dataset.sample;
+        if (previewSample === number && !preview.hidden && !previewFailed) return;
+        const sequence = ++previewSequence;
+        previewSample = number;
+        previewFailed = false;
+        preview.hidden = false;
+        previewTitle.textContent = sampleLabel(option) + " 미리보기";
+        previewStatus.textContent = "샘플을 불러오는 중…";
+        previewText.textContent = "";
+        previewText.setAttribute("aria-busy", "true");
+        for (const item of options) item.dataset.previewActive = String(item === option);
+        try {
+            const text = await getSample(number);
+            if (sequence !== previewSequence || popover.hidden || previewSample !== number) return;
+            previewText.textContent = text;
+            previewText.scrollTop = 0;
+            previewStatus.textContent = "미리보기는 입력 중인 내용을 바꾸지 않습니다.";
+        } catch (error) {
+            if (sequence !== previewSequence || popover.hidden || previewSample !== number) return;
+            previewFailed = true;
+            previewStatus.textContent = "미리보기를 불러오지 못했어요. " + errorText(error) + " 항목에 다시 마우스를 올리면 재시도합니다.";
+        } finally {
+            if (sequence === previewSequence) previewText.setAttribute("aria-busy", "false");
+        }
+    }
+
+    function focusOption(index) {
+        const next = (index + options.length) % options.length;
+        options.forEach((option, position) => { option.tabIndex = position === next ? 0 : -1; });
+        options[next].focus();
+    }
+
+    function openPopover(index = options.findIndex(option => option.dataset.sample === sample.value)) {
+        popover.hidden = false;
+        toggle.setAttribute("aria-expanded", "true");
+        focusOption(index);
+    }
+
+    function closePopover(restoreFocus = false) {
+        popover.hidden = true;
+        preview.hidden = true;
+        previewSample = null;
+        previewSequence++;
+        toggle.setAttribute("aria-expanded", "false");
+        for (const option of options) option.dataset.previewActive = "false";
+        if (restoreFocus) toggle.focus();
+    }
+
+    toggle.addEventListener("click", () => {
+        if (popover.hidden) openPopover();
+        else closePopover();
+    });
+    toggle.addEventListener("keydown", event => {
+        if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+        event.preventDefault();
+        openPopover(event.key === "ArrowUp" ? options.length - 1 : undefined);
+    });
+    for (const option of options) {
+        option.addEventListener("pointerenter", () => showPreview(option));
+        option.addEventListener("focus", () => showPreview(option));
+        option.addEventListener("click", () => {
+            sample.value = option.dataset.sample;
+            current.textContent = sampleLabel(option);
+            for (const item of options) item.setAttribute("aria-selected", String(item === option));
+            // 터치 화면에서도 선택한 계약서를 충분히 읽을 수 있도록 창을 유지한다.
+            focusOption(options.indexOf(option));
+            showPreview(option);
+        });
+    }
+    menu.addEventListener("keydown", event => {
+        const index = options.indexOf(document.activeElement);
+        const positions = { ArrowDown: index + 1, ArrowUp: index - 1, Home: 0, End: options.length - 1 };
+        if (!(event.key in positions)) return;
+        event.preventDefault();
+        focusOption(positions[event.key]);
+    });
+    document.addEventListener("keydown", event => {
+        if (event.key !== "Escape" || popover.hidden) return;
+        event.preventDefault();
+        closePopover(true);
+    });
+    picker.addEventListener("focusout", event => {
+        if (event.relatedTarget && !picker.contains(event.relatedTarget)) closePopover();
+    });
+    document.addEventListener("pointerdown", event => {
+        if (!picker.contains(event.target)) closePopover();
+    });
+    document.getElementById("sample-preview-close").addEventListener("click", () => closePopover(true));
 
     form.addEventListener("submit", async event => {
         event.preventDefault();

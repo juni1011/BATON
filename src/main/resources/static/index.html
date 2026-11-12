@@ -12,13 +12,20 @@
     <script src="/js/index.js" defer></script>
 </head>
 <body class="portal home-page">
-    <header class="site-header"><nav aria-label="공통 메뉴">
-        <a class="site-name" href="/index.html" aria-label="알바 첫걸음 홈"><img class="site-logo" src="/images/logo-b2.svg" alt="알바 첫걸음" width="220" height="48"></a>
-        <a href="/upload.html">계약서 점검</a>
-        <a href="/support.html">지원사업 추천</a>
-        <a href="/calendar.html">캘린더</a>
-        <a href="/signin.html">로그인</a>
-    </nav></header>
+    <header class="site-header">
+        <div class="site-account">
+            <nav class="account-nav" aria-label="계정 메뉴">
+                <a href="/signin.html">로그인</a>
+                <a href="/signup.html">회원가입</a>
+            </nav>
+        </div>
+        <nav class="primary-nav" aria-label="공통 메뉴">
+            <a class="site-name" href="/index.html" aria-label="알바 첫걸음 홈"><img class="site-logo" src="/images/logo-b2.svg" alt="알바 첫걸음" width="220" height="48"></a>
+            <a href="/upload.html">계약서 점검</a>
+            <a href="/support.html">지원사업 추천</a>
+            <a href="/calendar.html">캘린더</a>
+        </nav>
+    </header>
     <main id="main">
         <section class="intro">
             <h1>알바 첫걸음</h1>
@@ -38,11 +45,11 @@
         </nav>
         <div class="home-overview">
             <section class="card" aria-labelledby="summary-title">
-                <div class="section-heading"><h2 id="summary-title">내 추천 결과</h2><a href="/support.html">전체 보기</a></div>
+                <div class="section-heading"><h2 id="summary-title">내 추천 결과</h2><a href="/signin.html?next=%2Fsupport.html" data-auth-destination="/support.html">전체 보기</a></div>
                 <div id="summary"></div>
             </section>
             <section class="card" aria-labelledby="upcoming-title">
-                <div class="section-heading"><h2 id="upcoming-title">다가오는 일정</h2><a href="/calendar.html">캘린더</a></div>
+                <div class="section-heading"><h2 id="upcoming-title">캘린더</h2><a href="/signin.html?next=%2Fcalendar.html" data-auth-destination="/calendar.html">전체 보기</a></div>
                 <div id="upcoming"></div>
             </section>
         </div>
