@@ -20,16 +20,22 @@ public class SupportMatcher {
     public static final List<String> INCOME_LEVELS =
             List.of("중위소득 50% 이하", "중위소득 100% 이하", "중위소득 150% 이하", "중위소득 150% 초과");
 
-    /** 사업마다 판정하고 가능, 확인 필요, 불가 순으로 정렬한다. */
+    /** 응답에 담는 최대 건수. 실제 사업은 수천 건이라 판정 순서대로 상위만 돌려준다. */
+    public static final int MAX_RESULTS = 50;
+
+    /** 사업마다 판정하고 상위 {@link #MAX_RESULTS}건을 돌려준다. */
     public List<SupportMatch> match(MatchRequest request) {
         UserProfile profile = request == null ? null : request.profile();
+        SupportProgramSource.Catalog catalog = source.catalog();
         List<SupportMatch> matches = new ArrayList<>();
-        for (SupportProgram program : source.programs()) matches.add(evaluate(program, profile));
-        matches.sort(Comparator.comparingInt(match -> match.verdict().ordinal()));
-        return matches;
+        for (SupportProgram program : catalog.programs()) matches.add(evaluate(program, profile, catalog.sample()));
+        // 가능, 확인 필요, 불가 순으로, 같은 판정 안에서는 마감이 가까운 사업을 먼저(마감일을 모르면 뒤로) 둔다.
+        matches.sort(Comparator.<SupportMatch>comparingInt(match -> match.verdict().ordinal())
+                .thenComparing(SupportMatch::applyEnd, Comparator.nullsLast(Comparator.naturalOrder())));
+        return matches.size() > MAX_RESULTS ? List.copyOf(matches.subList(0, MAX_RESULTS)) : matches;
     }
 
-    private SupportMatch evaluate(SupportProgram p, UserProfile profile) {
+    private SupportMatch evaluate(SupportProgram p, UserProfile profile, boolean sample) {
         List<String> failed = new ArrayList<>();
         List<String> unknown = new ArrayList<>();
         List<String> passed = new ArrayList<>();
@@ -63,6 +69,8 @@ public class SupportMatcher {
             } else passed.add("가구 소득");
         }
 
+        unknown.addAll(p.unverified());
+
         MatchVerdict verdict;
         String reason;
         if (!failed.isEmpty()) {
@@ -76,8 +84,8 @@ public class SupportMatcher {
             reason = passed.isEmpty() ? "별도 조건이 없습니다."
                     : String.join(", ", passed) + " 조건을 충족합니다.";
         }
-        return new SupportMatch(p.id(), p.name(), p.organization(), verdict, (source.sample() ? "[가상 예시] " : "") + reason,
-                p.applyStart(), p.applyEnd(), p.applyUrl(), p.documents());
+        return new SupportMatch(p.id(), p.name(), p.organization(), verdict, (sample ? "[가상 예시] " : "") + reason,
+                p.applyStart(), p.applyEnd(), p.applyUrl(), p.documents(), sample);
     }
 
     private static void check(List<String> allowed, String value, String name,

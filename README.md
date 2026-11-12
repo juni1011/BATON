@@ -29,7 +29,7 @@ docker compose up -d --wait
 
 접속 주소: http://localhost:8080/ (index.html).
 화면: /signup.html(회원가입), /upload.html(계약서 입력), /confirm.html(추출값 확인), /report.html(점검), /support.html(지원사업 추천), /calendar.html(캘린더).
-현재 구현은 텍스트 파일, 붙여넣기, 가상 샘플 3종을 규칙으로 처리합니다. PDF·사진의 AI 추출과 실제 지원사업 데이터는 제출 목표에 포함됩니다.
+현재 구현은 텍스트 파일, 붙여넣기, 가상 샘플 3종을 규칙으로 처리합니다. PDF·사진의 AI 추출은 제출 목표에 포함됩니다. 지원사업은 `YOUTH_API_KEY`(온통청년 Open API 인증키)를 프로세스 환경변수로 주면 실제 청년정책을, 없으면 가상 예시를 사용합니다.
 서버 종료는 Ctrl+C를 사용합니다.
 
 MySQL의 데이터베이스·사용자 이름은 `easyton`, 포트는 `3306`입니다. `app_users` 테이블은 서버 시작 시 `schema.sql`로 생성하며, 기존 테이블과 회원 데이터는 유지합니다. 스키마가 변경되면 별도 마이그레이션이 필요합니다.
@@ -79,7 +79,7 @@ export DB_PASSWORD='your-db-password'
 
 [docs/API.md](docs/API.md)에 요청·응답 예시와 프런트 헬퍼가 있습니다.
 common.js를 바꿀 때는 팀 전체에 먼저 알립니다.
-지원사업은 모두 가상이며 실제 제도·기관·신청 링크가 아닙니다.
+`YOUTH_API_KEY`가 없으면 지원사업은 모두 가상이며 실제 제도·기관·신청 링크가 아닙니다.
 
 ## 제출 버전 요구사항
 

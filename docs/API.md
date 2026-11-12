@@ -96,7 +96,8 @@ DB 연결 설정과 로컬 실행 방법은 [README.md](../README.md)를 참고�
     "applyUrl": "https://example.com/support-a",
     "requiredDocuments": [
       "예시 신청서"
-    ]
+    ],
+    "sample": true
   },
   {
     "id": "support-example-b",
@@ -111,13 +112,22 @@ DB 연결 설정과 로컬 실행 방법은 [README.md](../README.md)를 참고�
       "예시 신청서",
       "재학증명서",
       "소득 확인서"
-    ]
+    ],
+    "sample": true
   }
 ]
 ```
 
-`MatchVerdict`: ELIGIBLE, NEED_CHECK, NOT_ELIGIBLE 순으로 정렬한다.
-`SupportMatcher`에 가상 사업 5건이 들어 있고 나이, 시·도, 상태, 거주 형태, 가구 소득 조건을 비교한다.
+응답 항목 `sample`은 가상 예시 사업이면 true, 온통청년 실제 정책이면 false다.
+
+`MatchVerdict`: ELIGIBLE, NEED_CHECK, NOT_ELIGIBLE 순으로 정렬하고, 같은 판정 안에서는 신청 마감이 가까운 사업을 먼저(마감일을 모르면 뒤로) 둔다.
+응답은 최대 50건이다.
+`SupportProgramSource`가 사업 목록을 공급한다. 환경변수 `YOUTH_API_KEY`가 없으면 `SampleSupportProgramSource`의 가상 사업 5건을,
+있으면 `YouthCenterProgramSource`가 온통청년 청년정책 Open API(`/go/ythip/getPlcy`)에서 받은 실제 정책을 쓴다.
+실제 정책은 서버 시작 직후와 24시간마다 전체를 받아 메모리에 두며, 갱신에 실패하면 마지막 성공 목록을 유지하고 첫 로딩 전에는 가상 사업을 돌려준다.
+신청 마감이 지난 사업은 제외하고, 신청 기간이 "상시" 등으로 비어 있으면 날짜 없이 남긴다.
+실제 정책은 나이(0은 제한 없음)와 신청 기간만 판정에 쓰고, 소득·신분·거주지는 코드값이라 해석하지 않고 항상 "확인 필요"로 둔다.
+따라서 실제 정책은 ELIGIBLE이 되지 않는다. 비교 조건은 나이, 시·도, 상태, 거주 형태, 가구 소득이다.
 조건에 맞지 않는 값이 하나라도 있으면 NOT_ELIGIBLE, 값이 없거나 "미확인"인 조건이 있으면 NEED_CHECK다.
 example.com은 예시 링크다. 실제 지원 조건이나 금액을 뜻하지 않는다.
 
