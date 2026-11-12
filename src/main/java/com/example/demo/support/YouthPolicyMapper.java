@@ -58,7 +58,8 @@ final class YouthPolicyMapper {
                 positive(policy, "sprtTrgtMinAge"), positive(policy, "sprtTrgtMaxAge"), null,
                 null, null, null, start, end,
                 firstUrl(policy, "aplyUrlAddr", "refUrlAddr1", "refUrlAddr2"),
-                documents(text(policy, "sbmsnDcmntCn")), unverified));
+                documents(text(policy, "sbmsnDcmntCn")), unverified,
+                list(text(policy, "lclsfNm")), regionCodes(text(policy, "zipCd"))));
     }
 
     /** 비어 있거나 "해당없음"이면 null. 앞뒤 공백은 제거한다. */
@@ -87,6 +88,16 @@ final class YouthPolicyMapper {
             if (url != null && (url.startsWith("https://") || url.startsWith("http://"))) return url;
         }
         return null;
+    }
+
+    private static List<String> list(String value) {
+        return value == null ? List.of() : List.of(value);
+    }
+
+    /** zipCd는 쉼표로 이어진 법정시군구코드다. 비어 있으면 지역을 알 수 없다. */
+    private static List<String> regionCodes(String text) {
+        if (text == null) return List.of();
+        return Arrays.stream(text.split(",")).map(String::strip).filter(s -> !s.isEmpty()).toList();
     }
 
     private static List<String> documents(String text) {
