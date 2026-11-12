@@ -10,6 +10,25 @@
 입력하지 않은 값은 `null`로 둔다. 0, false, 빈 문자열 등으로 추정하지 않는다.
 날짜는 `yyyy-MM-dd`, 시간은 `HH:mm`, enum은 대문자 문자열이다.
 
+## POST /api/contracts/extract
+
+`multipart/form-data`. `file`(텍스트 파일 또는 사진)이 있으면 파일을, 없으면 `text`를 읽는다. 응답은 `ContractInfo` JSON이다.
+사진(PNG·JPEG·WEBP·GIF, 10MB 이하)은 파일 앞부분의 형식으로 판별하며 서버의 Codex CLI(`codex exec`)가 읽는다.
+사진은 외부 AI로 전송되므로 `consent=true`를 함께 보내야 한다.
+
+| 상태 | 의미 |
+| --- | --- |
+| 400 | 파일과 텍스트가 모두 없음, 또는 사진인데 `consent=true`가 아님 |
+| 413 | 사진이 10MB 초과 |
+| 415 | 텍스트도 지원하는 사진도 아님(PDF 등) |
+| 422 | Codex 결과를 해석할 수 없음 |
+| 429 | 동시 사진 분석 2건 초과 |
+| 502 | Codex 실행이 실패함 |
+| 503 | Codex를 쓸 수 없음(미설치, 비활성화 등) |
+| 504 | 180초 안에 분석이 끝나지 않음 |
+
+사진에서 읽은 값은 범위를 검사해 벗어나면 null로 둔다(시급 1~1,000,000, 지급일 1~31 등).
+
 ## POST /api/auth/signup
 
 요청 `application/json`:

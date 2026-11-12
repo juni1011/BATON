@@ -1,0 +1,149 @@
+{
+ "type": "object",
+ "properties": {
+  "employerName": {
+   "type": [
+    "string",
+    "null"
+   ]
+  },
+  "workplace": {
+   "type": [
+    "string",
+    "null"
+   ]
+  },
+  "jobDescription": {
+   "type": [
+    "string",
+    "null"
+   ]
+  },
+  "hourlyWage": {
+   "type": [
+    "integer",
+    "null"
+   ]
+  },
+  "weeklyHours": {
+   "type": [
+    "number",
+    "null"
+   ]
+  },
+  "workDays": {
+   "type": [
+    "array",
+    "null"
+   ],
+   "items": {
+    "type": "string",
+    "enum": [
+     "MONDAY",
+     "TUESDAY",
+     "WEDNESDAY",
+     "THURSDAY",
+     "FRIDAY",
+     "SATURDAY",
+     "SUNDAY"
+    ]
+   }
+  },
+  "startTime": {
+   "type": [
+    "string",
+    "null"
+   ]
+  },
+  "endTime": {
+   "type": [
+    "string",
+    "null"
+   ]
+  },
+  "breakMinutes": {
+   "type": [
+    "integer",
+    "null"
+   ]
+  },
+  "contractStart": {
+   "type": [
+    "string",
+    "null"
+   ]
+  },
+  "contractEnd": {
+   "type": [
+    "string",
+    "null"
+   ]
+  },
+  "payDay": {
+   "type": [
+    "integer",
+    "null"
+   ]
+  },
+  "weeklyHolidayPayIncluded": {
+   "type": [
+    "boolean",
+    "null"
+   ]
+  },
+  "probation": {
+   "type": [
+    "boolean",
+    "null"
+   ]
+  },
+  "probationMonths": {
+   "type": [
+    "integer",
+    "null"
+   ]
+  },
+  "probationWageRate": {
+   "type": [
+    "integer",
+    "null"
+   ]
+  },
+  "socialInsuranceMentioned": {
+   "type": [
+    "boolean",
+    "null"
+   ]
+  },
+  "clauses": {
+   "type": [
+    "array",
+    "null"
+   ],
+   "items": {
+    "type": "string"
+   }
+  }
+ },
+ "required": [
+  "employerName",
+  "workplace",
+  "jobDescription",
+  "hourlyWage",
+  "weeklyHours",
+  "workDays",
+  "startTime",
+  "endTime",
+  "breakMinutes",
+  "contractStart",
+  "contractEnd",
+  "payDay",
+  "weeklyHolidayPayIncluded",
+  "probation",
+  "probationMonths",
+  "probationWageRate",
+  "socialInsuranceMentioned",
+  "clauses"
+ ],
+ "additionalProperties": false
+}
