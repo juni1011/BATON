@@ -44,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function render(matches) {
         results.replaceChildren();
         const notice = document.getElementById("source-notice");
-        if (!matches.length) { notice.hidden = true; results.textContent = "선택한 조건에 맞는 정책이 없습니다."; return; }
+        if (!matches.length) { notice.hidden = true; return; }
         const sample = matches.some(match => match.sample);
         notice.hidden = false;
         notice.replaceChildren(...(sample
@@ -71,7 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    if (profile) field("category").value = profile.category || "";
+    render(Easyton.getSupportMatches());
 
     form.addEventListener("submit", async event => {
         event.preventDefault();
@@ -79,9 +79,8 @@ document.addEventListener("DOMContentLoaded", () => {
         for (const id of FIELDS) next[id] = field(id).value.trim() || null;
         submit.disabled = true;
         try {
-            const category = field("category").value || null;
-            Easyton.saveUserProfile({ ...next, category });
-            const matches = await Easyton.postJson("/api/supports/match", { profile: next, category });
+            Easyton.saveUserProfile(next);
+            const matches = await Easyton.postJson("/api/supports/match", { profile: next });
             Easyton.saveSupportMatches(matches);
             notify(message, "");
             render(matches);
