@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const pad = value => String(value).padStart(2, "0");
     const today = todayIso();
     const hidden = new Set();
+    let messageTimer = null;
 
     let events = Easyton.getCalendarEvents().filter(event => event.type in EVENT_LABELS);
     // 오늘이 있는 달에 일정이 없으면 가장 가까운 다음 일정(없으면 첫 일정)의 달부터 보여 준다.
@@ -130,6 +131,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     addForm.addEventListener("submit", event => {
         event.preventDefault();
+        clearTimeout(messageTimer);
+        messageTimer = null;
         const title = field("title").value.trim();
         const date = field("date").value;
         if (!title) {
@@ -155,6 +158,10 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         Easyton.saveCalendarEvents(events);
         notify(message, "일정을 저장했어요.");
+        messageTimer = setTimeout(() => {
+            notify(message, "");
+            messageTimer = null;
+        }, 3000);
         hidden.delete(field("type").value);
         selected = date;
         year = Number(date.slice(0, 4));
