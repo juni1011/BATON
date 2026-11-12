@@ -30,12 +30,7 @@ public class SampleSupportProgramSource implements SupportProgramSource {
                     List.of("예시 신청서", "소득 확인서")));
 
     @Override
-    public List<SupportProgram> programs() {
-        return PROGRAMS;
-    }
-
-    @Override
-    public boolean sample() {
-        return true;
+    public Catalog catalog() {
+        return new Catalog(PROGRAMS, true);
     }
 }

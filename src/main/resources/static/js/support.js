@@ -1,6 +1,6 @@
 "use strict";
 
-/** 프로필을 입력받아 가상 지원사업 매칭 결과를 보여 주고 마감일을 캘린더에 추가한다. */
+/** 프로필을 입력받아 지원사업 매칭 결과를 보여 주고 마감일을 캘린더에 추가한다. */
 document.addEventListener("DOMContentLoaded", () => {
     const { VERDICT_LABELS, h, dateLabel, errorText, notify } = EasytonUI;
     const form = document.getElementById("profile-form");
@@ -43,7 +43,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function render(matches) {
         results.replaceChildren();
-        if (!matches.length) return;
+        const notice = document.getElementById("source-notice");
+        if (!matches.length) { notice.hidden = true; return; }
+        const sample = matches.some(match => match.sample);
+        notice.hidden = false;
+        notice.replaceChildren(...(sample
+            ? ["현재 목록은 화면 시연용 ", h("strong", { text: "가상 사업" }), "입니다. 실제 제도·기관·신청 링크가 아닙니다."]
+            : ["온통청년 청년정책 정보입니다. 소득·신분·거주지 등 세부 자격은 판정하지 않으므로 ",
+               h("strong", { text: "상세 공고에서 꼭 확인" }), "하세요. 마감이 가까운 순으로 상위 50건만 보여 줍니다."]));
         results.append(h("h2", { text: `추천 결과 ${matches.length}건` }));
         for (const match of matches) {
             const added = hasDeadline(match);
@@ -60,7 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 match.verdict !== "NOT_ELIGIBLE" && h("div", { class: "row" },
                     match.applyEnd && h("button", { type: "button", class: "btn small", disabled: added,
                         onclick: event => addDeadline(match, event.currentTarget) }, added ? "캘린더에 추가됨" : "마감일을 캘린더에 추가"),
-                    url && h("a", { class: "btn small", href: url, target: "_blank", rel: "noopener noreferrer", text: "신청 페이지 (예시 링크)" }))));
+                    url && h("a", { class: "btn small", href: url, target: "_blank", rel: "noopener noreferrer", text: match.sample ? "신청 페이지 (예시 링크)" : "신청 페이지 보기" }))));
         }
     }
 
