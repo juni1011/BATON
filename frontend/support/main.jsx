@@ -7,6 +7,7 @@ const FIELDS = ['sido', 'sigungu', 'status', 'housing', 'householdIncomeLevel'];
 const STATUS = ['대학생', '구직자', '재직자', '기타'];
 const HOUSING = ['월세', '전세', '자가', '가족과 거주', '기숙사·기타'];
 const INCOME = ['중위소득 50% 이하', '중위소득 100% 이하', '중위소득 150% 이하', '중위소득 150% 초과', '미확인'];
+const CATEGORIES = ['일자리', '창업', '주거', '교육', '복지문화', '참여권리'];
 const EMPTY = { age: '', sido: '', sigungu: '', status: '', housing: '', householdIncomeLevel: '' };
 const FIELD_ORDER = Object.keys(EMPTY);
 const STEP_FIELDS = [['age'], ['sido', 'sigungu'], ['status'], ['housing'], ['householdIncomeLevel']];
@@ -37,6 +38,13 @@ function loadProfile() {
 
 function loadMatches() {
     try { return array(window.Easyton.getSupportMatches()); } catch { return []; }
+}
+
+function loadCategory() {
+    try {
+        const category = window.Easyton.getUserProfile()?.category;
+        return typeof category === 'string' ? category : '';
+    } catch { return ''; }
 }
 
 function storedDeadlines() {
@@ -75,6 +83,8 @@ function SelectField({ id, label, value, options, onChange, placeholder = '선�
 function SupportApp() {
     const [profile, setProfile] = useState(loadProfile);
     const [matches, setMatches] = useState(loadMatches);
+    const [category, setCategory] = useState(loadCategory);
+    const [searched, setSearched] = useState(false);
     const [added, setAdded] = useState(storedDeadlines);
     const [message, setMessage] = useState('');
     const [busy, setBusy] = useState(false);
@@ -89,6 +99,7 @@ function SupportApp() {
     const districts = getDistricts(profile.sido);
     const regionKnown = REGIONS.some(region => region.name === profile.sido || region.aliases?.includes(profile.sido));
     const filled = STEP_FIELDS.filter(fields => fields.every(key => isFilled(key, profile[key]))).length;
+    const sampleResults = matches.some(match => match.sample !== false);
 
     function cancelAdvance() {
         clearTimeout(advanceTimer.current);
@@ -183,11 +194,13 @@ function SupportApp() {
         setBusy(true);
         setMessage('');
         try {
-            window.Easyton.saveUserProfile(next);
-            const response = await window.Easyton.postJson('/api/supports/match', { profile: next });
+            const filter = category || null;
+            window.Easyton.saveUserProfile({ ...next, category: filter });
+            const response = await window.Easyton.postJson('/api/supports/match', { profile: next, category: filter });
             if (!Array.isArray(response)) throw new Error('Invalid response');
             window.Easyton.saveSupportMatches(response);
             setMatches(response);
+            setSearched(true);
             requestAnimationFrame(() => {
                 const results = resultsRef.current;
                 if (!results) return;
@@ -281,12 +294,19 @@ function SupportApp() {
             </Step>
             <div className="support-submit-panel">
                 <div><strong>나에게 맞는 지원사업, 만나볼까요?</strong><p>입력한 조건으로 추천 결과를 확인하세요.</p></div>
+                <div className="support-category-field">
+                    <SelectField id="category" label="지원 분야 (카테고리)" value={category} options={CATEGORIES}
+                        placeholder="전체" onChange={setCategory} />
+                </div>
                 <button type="submit" className="btn primary" id="submit" disabled={busy}>{busy ? '추천 찾는 중…' : '추천 받기'}<span aria-hidden="true">→</span></button>
             </div>
         </form>
         <div id="message" className="notice error support-message" role="alert" hidden={!message}>{message}</div>
         <section id="results" className="support-results" ref={resultsRef} aria-live="polite" aria-label="지원사업 추천 결과">
-            {matches.length > 0 && <><div className="support-results-heading"><h2 id="results-title">추천 결과 <span>{matches.length}건</span></h2><p>내 조건을 바탕으로 확인한 지원사업이에요.</p></div>
+            {matches.length > 0 ? <><div className="support-results-heading"><h2 id="results-title">추천 결과 <span>{matches.length}건</span></h2><p>내 조건을 바탕으로 확인한 지원사업이에요.</p>
+                    <p id="source-notice" className="support-result-source">{sampleResults ? '예시 데이터' : '온통청년 청년정책 정보 · 최대 50건'}</p>
+                    {!sampleResults && <p>소득·신분·거주지 등 세부 자격은 상세 공고에서 확인해 주세요.</p>}
+                </div>
                 <div className="support-result-grid">{matches.map(match => {
                     const isAdded = added.has('support-' + match.id);
                     const url = /^https?:\/\//i.test(match.applyUrl || '') ? match.applyUrl : null;
@@ -298,10 +318,11 @@ function SupportApp() {
                             <dt>필요 서류</dt><dd>{array(match.requiredDocuments).join(', ') || '-'}</dd></dl>
                         {match.verdict !== 'NOT_ELIGIBLE' && <div className="row support-result-actions">
                             {match.applyEnd && <button type="button" className="btn small" disabled={isAdded} onClick={() => addDeadline(match)}>{isAdded ? '캘린더에 추가됨' : '마감일을 캘린더에 추가'}</button>}
-                            {url && <a className="btn small" href={url} target="_blank" rel="noopener noreferrer">신청 페이지 (예시 링크)</a>}
+                            {url && <a className="btn small" href={url} target="_blank" rel="noopener noreferrer">{match.sample === false ? '신청 페이지 보기' : '신청 페이지 (예시 링크)'}</a>}
                         </div>}
                     </article>;
-                })}</div></>}
+                })}</div></> : searched && <div className="support-results-heading"><h2 id="results-title">추천 결과 <span>0건</span></h2>
+                    <p>선택한 조건에 맞는 정책이 없습니다. 지원 분야나 거주 지역을 바꿔 다시 찾아보세요.</p></div>}
         </section>
     </>;
 }

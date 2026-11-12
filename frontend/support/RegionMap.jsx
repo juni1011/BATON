@@ -94,7 +94,7 @@ export default function RegionMap({ sido = "", district = "", zoomed = false, on
                     aria-describedby={descriptionId}
                     preserveAspectRatio="xMidYMid meet"
                 >
-                    <title id={titleId}>{regionLabel} 지도</title>
+                    <title id={titleId}>{`${regionLabel} 지도`}</title>
                     <desc id={descriptionId}>{description}</desc>
                     <g
                         className="region-map__world"
@@ -142,7 +142,7 @@ export default function RegionMap({ sido = "", district = "", zoomed = false, on
                                 onClick={event => selectWithPointer(event, canSelectDistrict, onSelectDistrict, item.name)}
                                 onKeyDown={event => selectWithKeyboard(event, canSelectDistrict, onSelectDistrict, item.name)}
                             >
-                                <title>{region.name} {item.name}</title>
+                                <title>{`${region.name} ${item.name}`}</title>
                             </path>
                         ))}
                         {region && <path d={region.path} className="region-map__outline" vectorEffect="non-scaling-stroke" />}

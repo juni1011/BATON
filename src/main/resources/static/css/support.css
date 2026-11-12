@@ -55,6 +55,8 @@
 .support-submit-panel strong { font-size: 19px; letter-spacing: -.03em; }
 .support-submit-panel p { color: var(--muted); font-size: 14px; margin: 6px 0 0; }
 .support-submit-panel .btn { min-width: 168px; min-height: 52px; gap: 28px; }
+.support-category-field { flex: 1; min-width: 200px; max-width: 260px; }
+.support-result-source { color: var(--primary) !important; font-weight: 600; }
 .support-message { margin-top: 24px; }
 .support-results { scroll-margin-top: 120px; }
 .support-results-heading { margin: 56px 0 24px; }
@@ -98,6 +100,7 @@
     .support-step-number { margin-bottom: 10px; }
     .support-submit-panel { padding: 26px 24px; }
     .support-submit-panel .btn { width: 100%; }
+    .support-category-field { width: 100%; max-width: none; }
     .support-submit-panel strong { font-size: 17px; }
     .support-result-grid .card { padding: 24px; }
 }
