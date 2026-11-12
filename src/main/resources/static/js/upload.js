@@ -9,13 +9,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const message = document.getElementById("message");
     const submit = document.getElementById("submit");
     const consent = document.getElementById("consent");
-    const consentBox = document.getElementById("image-consent");
 
-    /** 사진을 고르면 AI 전송 동의 칸을 보여 준다. 동의는 파일을 바꿀 때마다 다시 받는다. */
-    fileInput.addEventListener("change", () => {
-        const file = fileInput.files[0];
-        consentBox.hidden = !(file && file.type.startsWith("image/"));
-        consent.checked = false;
+    /** AI 전송 동의는 사용자가 직접 체크한 선택만 이 브라우저에 기억한다. */
+    try { consent.checked = localStorage.getItem("easyton.aiConsent") === "true"; } catch { /* 저장소를 못 쓰면 기본값 */ }
+    consent.addEventListener("change", () => {
+        try { localStorage.setItem("easyton.aiConsent", String(consent.checked)); } catch { /* 무시 */ }
     });
 
     const picker = document.getElementById("sample-picker");
@@ -161,10 +159,11 @@ document.addEventListener("DOMContentLoaded", () => {
             consent.focus();
             return;
         }
+        const useAi = consent.checked;
         submit.disabled = true;
-        submit.textContent = isImage ? "사진을 분석하는 중… (최대 몇 분)" : "추출하는 중…";
+        submit.textContent = useAi ? "AI가 읽는 중… (최대 몇 분)" : "추출하는 중…";
         try {
-            const contract = await Easyton.extractContract(file ? { file, consent: isImage && consent.checked } : { text });
+            const contract = await Easyton.extractContract(file ? { file, consent: useAi } : { text, consent: useAi });
             Easyton.saveContractInfo(contract);
             // 이전 계약의 리포트와 계약 일정은 더 이상 맞지 않으므로 지운다. 직접 추가한 일정은 남긴다.
             Easyton.saveCheckReport(null);
