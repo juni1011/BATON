@@ -63,6 +63,24 @@ export DB_PASSWORD='your-db-password'
 가입 성공 시 로그인 화면으로 이동하고 로그인 버튼 아래에 환영 메시지가 표시됩니다.
 로그인은 `POST /api/auth/signin`, 세션 확인은 `GET /api/auth/me`, 로그아웃은 `POST /api/auth/signout`을 사용합니다. 홈의 추천 받기·전체 보기 링크는 로그인 상태를 확인하며, 로그인 후 원래 선택한 화면으로 이동합니다. 이메일 인증은 아직 구현하지 않았습니다.
 
+## 지원사업 추천 화면 (React)
+
+`/support.html`의 입력·지도·추천 결과는 React로 구성합니다. 기존 Spring Boot 서버에서 그대로 제공하며, 실행에 외부 CDN은 필요하지 않습니다.
+입력 화면은 나이·거주 지역·현재 상태·거주 형태·가구 소득의 5개 항목입니다. 거주 지역은 시·도와 시·군·구 선택창을 같은 카드에 두며, 시·도를 고르면 같은 지도가 확대되어 시·군·구를 선택할 수 있습니다. API에 전달하는 프로필의 6개 필드는 유지합니다.
+수정할 소스는 `frontend/support/`, 화면 스타일은 `src/main/resources/static/css/support.css`와 `support-map.css`입니다.
+
+```sh
+npm ci
+npm run build
+./gradlew processResources
+```
+
+`npm run dev`는 React 소스 변경을 감지해 기존 정적 번들을 다시 만듭니다. Spring Boot 서버와 함께 사용하며 별도 프론트 서버를 만들지 않습니다. 변경 후 `./gradlew processResources`와 브라우저 새로고침으로 확인합니다.
+빌드한 `src/main/resources/static/js/support.js`와 라이선스 파일은 저장소에 포함하므로 Java 서버만 실행해도 화면을 볼 수 있습니다. 생성 파일 대신 `frontend/support/`의 JSX를 수정해 주세요.
+연령 그림은 화면 표시를 위해 0~18세·19~34세·35~64세·65세 이상으로 구분하며 추천 판정은 기존 서버 규칙을 사용합니다.
+지도 데이터 출처와 라이선스는 `frontend/support/MAP_DATA_LICENSE.md`를 참고합니다.
+지도와 선택창은 양방향으로 연동합니다. 항목 선택을 마치면 다음 빈 항목으로 이동하며, 나이·직접 입력은 입력을 멈춘 뒤 1.1초 또는 Enter로 확정합니다. 직접 스크롤하거나 다른 입력에 포커스를 옮기면 대기 중인 자동 이동은 취소됩니다. 전체 입력을 마쳐도 추천 요청은 사용자가 버튼으로 실행합니다.
+
 ## 테스트
 
 ```sh
