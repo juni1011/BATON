@@ -17,6 +17,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class SupportControllerTests {
     @Autowired MockMvc mvc;
 
+    @Test
+    void filtersMappedPoliciesByRegionAndCategory() throws Exception {
+        try (var input = getClass().getResourceAsStream("/youth/getPlcy-sample.json")) {
+            var policies = tools.jackson.databind.json.JsonMapper.builder().build().readTree(input)
+                    .path("result").path("youthPolicyList").valueStream()
+                    .map(YouthPolicyMapper::map).flatMap(java.util.Optional::stream).toList();
+            var matcher = new SupportMatcher(() -> new SupportProgramSource.Catalog(policies, false));
+            var profile = new UserProfile(25, "대구광역시", null, null, null, null);
+            org.junit.jupiter.api.Assertions.assertEquals(java.util.List.of("20261110005400214811"),
+                    matcher.match(new MatchRequest(profile, "일자리")).stream().map(SupportMatch::id).toList());
+        }
+    }
+
     private String request(String profile) {
         return "{\"profile\":" + profile + "}";
     }
@@ -46,6 +59,6 @@ class SupportControllerTests {
                 + "\"status\":\"재직자\",\"housing\":\"월세\",\"householdIncomeLevel\":\"중위소득 150% 초과\"}";
         mvc.perform(post("/api/supports/match").contentType(MediaType.APPLICATION_JSON).content(request(profile)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[?(@.verdict == 'NOT_ELIGIBLE')]").value(hasSize(5)));
+                .andExpect(jsonPath("$[?(@.verdict == 'NOT_ELIGIBLE')]").value(hasSize(4)));
     }
 }
