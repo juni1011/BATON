@@ -188,9 +188,15 @@ function SupportApp() {
             if (!Array.isArray(response)) throw new Error('Invalid response');
             window.Easyton.saveSupportMatches(response);
             setMatches(response);
-            requestAnimationFrame(() => resultsRef.current?.scrollIntoView({
-                behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start'
-            }));
+            requestAnimationFrame(() => {
+                const results = resultsRef.current;
+                if (!results) return;
+                const header = document.querySelector('.site-header')?.getBoundingClientRect().height || 0;
+                window.scrollTo({
+                    top: Math.max(0, window.scrollY + results.getBoundingClientRect().top - header - 20),
+                    behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'
+                });
+            });
         } catch (error) {
             setMessage(window.EasytonUI.errorText(error));
         } finally {
