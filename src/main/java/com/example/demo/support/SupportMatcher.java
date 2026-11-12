@@ -130,7 +130,7 @@ public class SupportMatcher {
                     : String.join(", ", passed) + " 조건을 충족합니다.";
         }
         return new SupportMatch(p.id(), p.name(), p.organization(), verdict, (sample ? "[가상 예시] " : "") + reason,
-                p.applyStart(), p.applyEnd(), p.applyUrl(), p.documents(), sample);
+                p.applyStart(), p.applyEnd(), p.applyUrl(), p.documents(), sample, p.categories());
     }
 
     private static void check(List<String> allowed, String value, String name,

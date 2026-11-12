@@ -178,8 +178,19 @@ function SupportApp() {
         update('age', String(Math.max(0, Math.min(120, current + direction))), { advance: true, delay: 1100 });
     }
 
-    async function recommend(event) {
+    function recommend(event) {
         event.preventDefault();
+        runSearch(category, true);
+    }
+
+    /** 분야 버튼: 선택한 분야로 같은 조건을 다시 찾는다. 서버가 전체 정책에서 그 분야만 골라 마감 임박 순 상위 50건을 준다. */
+    function chooseCategory(value) {
+        if (busy || value === category) return;
+        setCategory(value);
+        runSearch(value, false);
+    }
+
+    async function runSearch(selectedCategory, scrollToResults) {
         cancelAdvance();
         if (submitting.current) return;
         const age = profile.age === '' ? null : Number(profile.age);
@@ -194,14 +205,14 @@ function SupportApp() {
         setBusy(true);
         setMessage('');
         try {
-            const filter = category || null;
+            const filter = selectedCategory || null;
             window.Easyton.saveUserProfile({ ...next, category: filter });
             const response = await window.Easyton.postJson('/api/supports/match', { profile: next, category: filter });
             if (!Array.isArray(response)) throw new Error('Invalid response');
             window.Easyton.saveSupportMatches(response);
             setMatches(response);
             setSearched(true);
-            requestAnimationFrame(() => {
+            if (scrollToResults) requestAnimationFrame(() => {
                 const results = resultsRef.current;
                 if (!results) return;
                 const header = document.querySelector('.site-header')?.getBoundingClientRect().height || 0;
@@ -303,6 +314,10 @@ function SupportApp() {
         </form>
         <div id="message" className="notice error support-message" role="alert" hidden={!message}>{message}</div>
         <section id="results" className="support-results" ref={resultsRef} aria-live="polite" aria-label="지원사업 추천 결과">
+            {(matches.length > 0 || searched) && <div className="support-category-tabs" role="group" aria-label="지원 분야별로 보기">
+                {['', ...CATEGORIES].map(value => <button type="button" key={value || 'all'} className="support-category-tab"
+                    aria-pressed={category === value} disabled={busy} onClick={() => chooseCategory(value)}>{value || '전체'}</button>)}
+            </div>}
             {matches.length > 0 ? <><div className="support-results-heading"><h2 id="results-title">추천 결과 <span>{matches.length}건</span></h2><p>내 조건을 바탕으로 확인한 지원사업이에요.</p>
                     <p id="source-notice" className="support-result-source">{sampleResults ? '예시 데이터' : '온통청년 청년정책 정보 · 최대 50건'}</p>
                     {!sampleResults && <p>소득·신분·거주지 등 세부 자격은 상세 공고에서 확인해 주세요.</p>}
@@ -311,7 +326,8 @@ function SupportApp() {
                     const isAdded = added.has('support-' + match.id);
                     const url = /^https?:\/\//i.test(match.applyUrl || '') ? match.applyUrl : null;
                     return <article className="card stack" key={match.id}>
-                        <span className={'badge ' + match.verdict}>{window.EasytonUI.VERDICT_LABELS[match.verdict] || match.verdict}</span>
+                        <div className="support-card-tags"><span className={'badge ' + match.verdict}>{window.EasytonUI.VERDICT_LABELS[match.verdict] || match.verdict}</span>
+                            {array(match.categories).map(name => <span className="support-category-tag" key={name}>{name}</span>)}</div>
                         <h3>{match.name}</h3><p>{match.reason}</p>
                         <dl className="meta"><dt>기관</dt><dd>{match.organization || '-'}</dd>
                             <dt>신청 기간</dt><dd>{window.EasytonUI.dateLabel(match.applyStart)} ~ {window.EasytonUI.dateLabel(match.applyEnd)}</dd>
