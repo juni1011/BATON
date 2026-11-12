@@ -1,58 +1,35 @@
 package com.example.demo.support;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
 /**
- * 가상 지원사업 목록과 프로필을 조건별로 비교한다.
- * 모든 사업·기관·조건·일정은 화면 시연용 가상 데이터이며 실제 제도가 아니다.
+ * 지원사업 목록({@link SupportProgramSource})과 프로필을 조건별로 비교한다.
  */
 @Component
 public class SupportMatcher {
+    private final SupportProgramSource source;
+
+    public SupportMatcher(SupportProgramSource source) {
+        this.source = source;
+    }
+
     /** 소득 구간 선택지. 뒤로 갈수록 소득이 높다. 이 밖의 값(미확인 등)은 확인 필요로 본다. */
     public static final List<String> INCOME_LEVELS =
             List.of("중위소득 50% 이하", "중위소득 100% 이하", "중위소득 150% 이하", "중위소득 150% 초과");
-
-    /** 가상 사업 한 건의 조건. null인 조건은 제한이 없다는 뜻이다. */
-    record Program(String id, String name, String organization, Integer minAge, Integer maxAge, String sido,
-                   List<String> statuses, List<String> housings, String maxIncomeLevel,
-                   LocalDate applyStart, LocalDate applyEnd, String applyUrl, List<String> documents) {}
-
-    static final List<Program> PROGRAMS = List.of(
-            new Program("support-example-a", "예시 청년 교통비 지원", "가상청년센터", 19, 34, null,
-                    null, null, null,
-                    LocalDate.of(2026, 11, 1), LocalDate.of(2026, 11, 30), "https://example.com/support-a",
-                    List.of("예시 신청서")),
-            new Program("support-example-b", "예시 대학생 장학 지원", "가상지원재단", null, null, null,
-                    List.of("대학생"), null, "중위소득 100% 이하",
-                    LocalDate.of(2026, 12, 1), LocalDate.of(2026, 12, 31), "https://example.com/support-b",
-                    List.of("예시 신청서", "재학증명서", "소득 확인서")),
-            new Program("support-example-c", "예시 청년 월세 지원", "가상주거지원센터", 19, 34, null,
-                    null, List.of("월세"), "중위소득 150% 이하",
-                    LocalDate.of(2026, 11, 15), LocalDate.of(2026, 12, 15), "https://example.com/support-c",
-                    List.of("예시 신청서", "임대차계약서 사본", "소득 확인서")),
-            new Program("support-example-d", "예시 가상시 청년 상담 지원", "가상시청", 15, 39, "가상시",
-                    null, null, null,
-                    LocalDate.of(2026, 11, 1), LocalDate.of(2027, 1, 31), "https://example.com/support-d",
-                    List.of("예시 신청서")),
-            new Program("support-example-e", "예시 청년 생활안정 지원", "가상생활지원단", null, null, null,
-                    List.of("대학생", "구직자", "재직자"), null, "중위소득 100% 이하",
-                    LocalDate.of(2026, 12, 1), LocalDate.of(2027, 1, 15), "https://example.com/support-e",
-                    List.of("예시 신청서", "소득 확인서")));
 
     /** 사업마다 판정하고 가능, 확인 필요, 불가 순으로 정렬한다. */
     public List<SupportMatch> match(MatchRequest request) {
         UserProfile profile = request == null ? null : request.profile();
         List<SupportMatch> matches = new ArrayList<>();
-        for (Program program : PROGRAMS) matches.add(evaluate(program, profile));
+        for (SupportProgram program : source.programs()) matches.add(evaluate(program, profile));
         matches.sort(Comparator.comparingInt(match -> match.verdict().ordinal()));
         return matches;
     }
 
-    private SupportMatch evaluate(Program p, UserProfile profile) {
+    private SupportMatch evaluate(SupportProgram p, UserProfile profile) {
         List<String> failed = new ArrayList<>();
         List<String> unknown = new ArrayList<>();
         List<String> passed = new ArrayList<>();
@@ -99,7 +76,7 @@ public class SupportMatcher {
             reason = passed.isEmpty() ? "별도 조건이 없습니다."
                     : String.join(", ", passed) + " 조건을 충족합니다.";
         }
-        return new SupportMatch(p.id(), p.name(), p.organization(), verdict, "[가상 예시] " + reason,
+        return new SupportMatch(p.id(), p.name(), p.organization(), verdict, (source.sample() ? "[가상 예시] " : "") + reason,
                 p.applyStart(), p.applyEnd(), p.applyUrl(), p.documents());
     }
 
