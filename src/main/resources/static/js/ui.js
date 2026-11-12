@@ -108,6 +108,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             onclick: async event => {
                 event.preventDefault();
                 try { await fetch("/api/auth/signout", { method: "POST" }); } catch { /* 무시 */ }
+                if (window.Easyton) Easyton.clearLocal();
                 location.assign("/index.html");
             }
         });
