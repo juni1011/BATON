@@ -26,7 +26,8 @@
             <a href="/calendar.html">캘린더</a>
         </nav>
     </header>
-    <main>
+    <main class="contract-review">
+        <ol class="review-steps" aria-label="계약서 점검 단계"><li>계약서 입력</li><li>항목 확인</li><li aria-current="step">점검 결과</li></ol>
         <div class="row between">
             <div>
                 <h1>점검 리포트</h1>
@@ -43,6 +44,10 @@
             <a class="btn primary" href="/upload.html">계약서 업로드하기</a>
         </section>
         <div id="report" hidden>
+            <section class="card review-guide" id="before-signing" aria-labelledby="before-signing-title" hidden>
+                <h2 id="before-signing-title">서명 전 먼저 물어볼 것</h2>
+                <ol id="priority-questions"></ol>
+            </section>
             <div class="stats" id="stats"></div>
             <p class="muted small" id="pay-note"></p>
             <div id="items"></div>

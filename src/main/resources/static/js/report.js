@@ -21,7 +21,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     const items = report.items || [];
-    const issues = items.filter(item => item.level !== "OK");
+    const issues = ["DANGER", "MISSING", "WARNING"].flatMap(level => items.filter(item => item.level === level));
+    const priorityQuestions = issues.filter(item => item.questionForEmployer).slice(0, 3);
+    if (priorityQuestions.length) {
+        document.getElementById("priority-questions").append(...priorityQuestions.map(item =>
+            h("li", {}, h("strong", { text: item.title }), h("p", { text: item.questionForEmployer }))));
+        document.getElementById("before-signing").hidden = false;
+    }
     if (contract && contract.employerName) {
         document.getElementById("subtitle").textContent = `${contract.employerName} 계약서에서 확인이 필요한 부분을 정리했습니다.`;
     }

@@ -7,7 +7,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const message = document.getElementById("message");
     const origin = document.getElementById("origin");
     const submit = document.getElementById("submit");
-    const field = id => document.getElementById(id);
+    const times = {
+        startTime: EasytonUI.contractTime("startTime"),
+        endTime: EasytonUI.contractTime("endTime")
+    };
+    const field = id => times[id] || document.getElementById(id);
 
     const TEXT = ["employerName", "workplace", "jobDescription", "startTime", "endTime", "contractStart", "contractEnd"];
     const INTEGER = ["hourlyWage", "breakMinutes", "payDay", "probationMonths", "probationWageRate"];
@@ -21,7 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
     /** 값이 비어 있는(미기재) 입력을 점선으로 표시한다. */
     function markEmpty() {
         for (const id of [...TEXT, ...INTEGER, ...BOOLEAN, "weeklyHours", "clauses"]) {
-            field(id).classList.toggle("is-null", field(id).value === "");
+            document.getElementById(id).classList.toggle("is-null", field(id).value === "");
         }
     }
 
@@ -80,6 +84,11 @@ document.addEventListener("DOMContentLoaded", () => {
     form.addEventListener("submit", async event => {
         event.preventDefault();
         const contract = read();
+        if (!Object.values(contract).some(value => value !== null)) {
+            notify(message, "점검할 계약 내용을 하나 이상 입력해 주세요.", "error");
+            field("employerName").focus();
+            return;
+        }
         const problem = validate(contract);
         if (problem) {
             notify(message, problem, "error");
@@ -92,7 +101,10 @@ document.addEventListener("DOMContentLoaded", () => {
             Easyton.saveContractInfo(contract);
             location.href = "/report.html";
         } catch (error) {
-            notify(message, errorText(error), "error");
+            const detail = /^HTTP 404\b/.test(error.message)
+                ? "현재 서버에 계약서 점검 기능이 연결되어 있지 않아요. 입력한 내용은 이 화면에 남아 있어요."
+                : errorText(error);
+            notify(message, detail, "error");
             submit.disabled = false;
             submit.textContent = "저장하고 점검하기";
         }

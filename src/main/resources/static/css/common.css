@@ -206,15 +206,39 @@ textarea:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px;
 /* 개인 일정 추가 */
 #add-form .schedule-times { display: grid; gap: 2px; }
 #add-form .schedule-clock { display: flex; align-items: center; gap: 6px; }
-#add-form .schedule-clock select {
+#add-form .schedule-clock select, .contract-time select {
     width: auto;
-    min-width: 4.25rem;
-    min-height: 36px;
-    padding: 4px 6px;
+    min-width: 4.75rem;
+    min-height: 44px;
+    padding: 6px 10px;
     border: 0;
     border-radius: 4px;
     background: transparent;
     cursor: pointer;
 }
-#add-form .schedule-clock select:not(:disabled):hover { background: var(--primary-soft); }
+#add-form .schedule-clock select:hover, .contract-time select:hover { background: var(--primary-soft); }
 #add-form .schedule-clock select:disabled { color: var(--muted); cursor: default; }
+
+/* 계약서 점검 단계와 안내 */
+.review-steps {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px;
+    list-style: none; padding: 0; margin: 0 0 24px;
+}
+.review-steps li {
+    display: flex; align-items: center; gap: 6px; padding: 8px 4px;
+    border-bottom: 2px solid var(--line); font-size: 13px; color: var(--muted);
+}
+.review-steps li[aria-current="step"] {
+    border-color: var(--primary); color: var(--primary); font-weight: 700;
+}
+.review-guide { border-left: 3px solid var(--accent); }
+.review-guide dl {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 175px), 1fr));
+    gap: 12px 22px; margin: 0 0 12px;
+}
+.review-guide dt { font-weight: 700; }
+.review-guide dd, .review-guide li p { margin: 4px 0 0; color: var(--muted); }
+.review-guide ol { margin: 0; padding-left: 24px; }
+.review-guide li + li { margin-top: 12px; }
+
+.contract-time { display: flex; flex-wrap: wrap; gap: 6px; }
