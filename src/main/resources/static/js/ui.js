@@ -87,18 +87,30 @@ window.EasytonUI = (() => {
     document.addEventListener("DOMContentLoaded", () => {
         const path = location.pathname === "/" ? "/index.html" : location.pathname;
         for (const link of document.querySelectorAll("nav a")) {
-            if (link.getAttribute("href") === path) link.setAttribute("aria-current", "page");
+            if (link.pathname === path && link.origin === location.origin) link.setAttribute("aria-current", "page");
         }
     });
 
-    return Object.freeze({ DAYS, DAY_LABELS, LEVEL_LABELS, VERDICT_LABELS, EVENT_LABELS, USER_EVENT_TYPES,
+    function contractTime(id) {
+        const [hour, minute] = document.getElementById(id).querySelectorAll("select");
+        return {
+            get value() { return hour.value ? hour.value + ":" + minute.value : ""; },
+            set value(time) {
+                const [hours, minutes] = (time || "").split(":");
+                hour.value = hours?.padStart(2, "0") || "";
+                minute.value = minutes || "00";
+            }
+        };
+    }
+
+    return Object.freeze({ contractTime, DAYS, DAY_LABELS, LEVEL_LABELS, VERDICT_LABELS, EVENT_LABELS, USER_EVENT_TYPES,
         h, won, dateLabel, todayIso, errorText, notify, saveGeneratedEvents, analyze });
 })();
 
 /** 로그인 상태이면 메뉴의 "로그인" 링크를 "이름님 · 로그아웃"으로 바꾼다. 서버에 연결할 수 없으면 그대로 둔다. */
 document.addEventListener("DOMContentLoaded", async () => {
-    const link = document.querySelector('.site-header nav a[href="/signin.html"]');
-    if (!link) return;
+    const account = document.querySelector(".account-nav");
+    if (!account) return;
     try {
         const response = await fetch("/api/auth/me");
         if (!response.ok) return;
@@ -107,11 +119,18 @@ document.addEventListener("DOMContentLoaded", async () => {
             href: "#", text: "로그아웃",
             onclick: async event => {
                 event.preventDefault();
-                try { await fetch("/api/auth/signout", { method: "POST" }); } catch { /* 무시 */ }
+                try {
+                    const result = await fetch("/api/auth/signout", { method: "POST" });
+                    if (!result.ok) throw new Error("Signout failed");
+                } catch {
+                    const status = account.querySelector("[role=status]");
+                    if (!status) account.append(EasytonUI.h("span", { role: "status", text: "로그아웃을 다시 시도해 주세요." }));
+                    return;
+                }
                 if (window.Easyton) Easyton.clearLocal();
                 location.assign("/index.html");
             }
         });
-        link.replaceWith(EasytonUI.h("span", { class: "nav-user", text: `${user.name}님` }), logout);
+        account.replaceChildren(EasytonUI.h("span", { class: "nav-user", text: `${user.name}님` }), logout);
     } catch { /* 비로그인 상태로 둔다 */ }
 });
