@@ -36,11 +36,98 @@ document.addEventListener("DOMContentLoaded", () => {
     const fileInput = document.getElementById("file");
     const message = document.getElementById("message");
     const submit = document.getElementById("submit");
+    const dropzone = document.getElementById("file-dropzone");
+    const filePrompt = document.getElementById("file-prompt");
+    const fileName = document.getElementById("file-name");
+    const fileStatus = document.getElementById("file-status");
+    let dragDepth = 0;
+    let lastValidFiles = fileInput.files;
+
+    function fileError(file) {
+        if (!/\.(txt|png|jpe?g|webp)$/i.test(file.name)) {
+            return "이 파일 형식은 읽을 수 없어요. TXT, PNG, JPG, WebP 파일을 고르거나 아래에 직접 입력해 주세요.";
+        }
+        if (!file.size || file.size > 10 * 1024 * 1024) return "내용이 있는 10MB 이하 파일을 선택해 주세요.";
+        return "";
+    }
+
+    function showFileStatus(text, error = false) {
+        fileStatus.textContent = text;
+        fileStatus.hidden = !text;
+        fileStatus.classList.toggle("is-error", error);
+        fileStatus.setAttribute("role", error ? "alert" : "status");
+    }
+
+    function renderFile(dragging = false) {
+        const file = fileInput.files[0];
+        dropzone.classList.toggle("is-dragging", dragging);
+        filePrompt.textContent = dragging ? "여기에 드롭하세요" : file ? "계약서가 첨부되었어요" : "계약서를 끌어오거나 눌러서 첨부해 주세요";
+        fileName.hidden = !file || dragging;
+        fileName.textContent = file ? file.name + " · " + (file.size >= 1024 * 1024
+            ? (file.size / (1024 * 1024)).toFixed(1) + "MB" : Math.max(1, Math.ceil(file.size / 1024)) + "KB") : "";
+    }
+
+    function resetDrag() {
+        dragDepth = 0;
+        renderFile();
+    }
+
+    const isFileDrag = event => Array.from(event.dataTransfer?.types || []).includes("Files");
+    fileInput.addEventListener("change", () => {
+        const file = fileInput.files[0];
+        const error = file ? fileError(file) : "";
+        if (error) fileInput.files = lastValidFiles;
+        else lastValidFiles = fileInput.files;
+        resetDrag();
+        showFileStatus(error || (file ? "첨부한 계약서를 확인했어요. ‘다음’을 눌러 진행해 주세요." : ""), Boolean(error));
+    });
+    dropzone.addEventListener("dragenter", event => {
+        if (!isFileDrag(event) || fileInput.disabled) return;
+        event.preventDefault();
+        dragDepth++;
+        renderFile(true);
+    });
+    dropzone.addEventListener("dragover", event => {
+        if (!isFileDrag(event) || fileInput.disabled) return;
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "copy";
+    });
+    dropzone.addEventListener("dragleave", () => {
+        dragDepth = Math.max(0, dragDepth - 1);
+        if (!dragDepth) resetDrag();
+    });
+    dropzone.addEventListener("drop", event => {
+        if (!isFileDrag(event)) return;
+        event.preventDefault();
+        resetDrag();
+        if (fileInput.disabled) return;
+        const files = event.dataTransfer.files;
+        if (files.length !== 1) {
+            showFileStatus("계약서 파일을 한 번에 하나씩 첨부해 주세요.", true);
+            return;
+        }
+        const error = fileError(files[0]);
+        if (error) {
+            showFileStatus(error, true);
+            return;
+        }
+        fileInput.files = files;
+        fileInput.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    // 업로드 영역 밖에 놓아도 브라우저가 계약서 파일로 이동하지 않게 한다.
+    for (const type of ["dragover", "drop"]) document.addEventListener(type, event => {
+        if (!isFileDrag(event)) return;
+        event.preventDefault();
+        if (type === "drop") resetDrag();
+    });
+    document.addEventListener("dragleave", event => {
+        if (!event.relatedTarget && (event.target === document.documentElement || event.target === document.body)) resetDrag();
+    });
+    window.addEventListener("dragend", resetDrag);
+    window.addEventListener("blur", resetDrag);
 
     const picker = document.getElementById("sample-picker");
-    const sample = document.getElementById("sample");
     const toggle = document.getElementById("sample-toggle");
-    const current = document.getElementById("sample-current");
     const popover = document.getElementById("sample-popover");
     const menu = document.getElementById("sample-options");
     const options = [...menu.querySelectorAll("[data-sample]")];
@@ -52,6 +139,27 @@ document.addEventListener("DOMContentLoaded", () => {
     let previewSequence = 0;
     let previewSample = null;
     let previewFailed = false;
+    let previewHideTimer = null;
+
+    function cancelPreviewHide() {
+        clearTimeout(previewHideTimer);
+        previewHideTimer = null;
+    }
+
+    function hidePreview() {
+        cancelPreviewHide();
+        preview.hidden = true;
+        previewSample = null;
+        previewSequence++;
+        for (const option of options) option.dataset.previewActive = "false";
+    }
+
+    function schedulePreviewHide(event) {
+        if (event.pointerType === "touch") return;
+        cancelPreviewHide();
+        // 항목과 미리보기 사이의 짧은 간격을 건너가며 읽고 스크롤할 수 있다.
+        previewHideTimer = setTimeout(hidePreview, 120);
+    }
 
     function sampleLabel(option) {
         return option.querySelector(".sample-option-label").textContent;
@@ -77,6 +185,7 @@ document.addEventListener("DOMContentLoaded", () => {
     /** 닫힌 창 또는 이전 항목의 늦은 응답이 현재 미리보기를 덮어쓰지 않게 한다. */
     async function showPreview(option) {
         if (popover.hidden) return;
+        cancelPreviewHide();
         const number = option.dataset.sample;
         if (previewSample === number && !preview.hidden && !previewFailed) return;
         const sequence = ++previewSequence;
@@ -105,23 +214,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function focusOption(index) {
         const next = (index + options.length) % options.length;
-        options.forEach((option, position) => { option.tabIndex = position === next ? 0 : -1; });
         options[next].focus();
+        showPreview(options[next]);
     }
 
-    function openPopover(index = options.findIndex(option => option.dataset.sample === sample.value)) {
+    function openPopover(index = null) {
         popover.hidden = false;
         toggle.setAttribute("aria-expanded", "true");
-        focusOption(index);
+        if (index !== null) focusOption(index);
     }
 
     function closePopover(restoreFocus = false) {
         popover.hidden = true;
-        preview.hidden = true;
-        previewSample = null;
-        previewSequence++;
+        hidePreview();
         toggle.setAttribute("aria-expanded", "false");
-        for (const option of options) option.dataset.previewActive = "false";
         if (restoreFocus) toggle.focus();
     }
 
@@ -132,20 +238,19 @@ document.addEventListener("DOMContentLoaded", () => {
     toggle.addEventListener("keydown", event => {
         if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
         event.preventDefault();
-        openPopover(event.key === "ArrowUp" ? options.length - 1 : undefined);
+        openPopover(event.key === "ArrowUp" ? options.length - 1 : 0);
     });
     for (const option of options) {
         option.addEventListener("pointerenter", () => showPreview(option));
-        option.addEventListener("focus", () => showPreview(option));
-        option.addEventListener("click", () => {
-            sample.value = option.dataset.sample;
-            current.textContent = sampleLabel(option);
-            for (const item of options) item.setAttribute("aria-selected", String(item === option));
-            // 터치 화면에서도 선택한 계약서를 충분히 읽을 수 있도록 창을 유지한다.
-            focusOption(options.indexOf(option));
-            showPreview(option);
+        option.addEventListener("pointerleave", schedulePreviewHide);
+        option.addEventListener("focus", () => {
+            if (option.matches(":focus-visible")) showPreview(option);
         });
+        // 터치·키보드에서도 내용을 열 수 있지만 선택값은 저장하지 않는다.
+        option.addEventListener("click", () => showPreview(option));
     }
+    preview.addEventListener("pointerenter", cancelPreviewHide);
+    preview.addEventListener("pointerleave", schedulePreviewHide);
     menu.addEventListener("keydown", event => {
         const index = options.indexOf(document.activeElement);
         const positions = { ArrowDown: index + 1, ArrowUp: index - 1, Home: 0, End: options.length - 1 };
@@ -161,10 +266,10 @@ document.addEventListener("DOMContentLoaded", () => {
     picker.addEventListener("focusout", event => {
         if (event.relatedTarget && !picker.contains(event.relatedTarget)) closePopover();
     });
+    toggle.addEventListener("focus", hidePreview);
     document.addEventListener("pointerdown", event => {
         if (!picker.contains(event.target)) closePopover();
     });
-    document.getElementById("sample-preview-close").addEventListener("click", () => closePopover(true));
 
     form.addEventListener("submit", async event => {
         event.preventDefault();
@@ -179,15 +284,12 @@ document.addEventListener("DOMContentLoaded", () => {
             notify(message, "파일을 선택하거나 계약 항목을 하나 이상 입력해 주세요.", "error");
             return;
         }
-        if (file && !/\.(txt|png|jpe?g|webp)$/i.test(file.name)) {
-            notify(message, "이 파일 형식은 읽을 수 없어요. TXT, PNG, JPG, WebP 파일을 고르거나 아래에 직접 입력해 주세요.", "error");
-            return;
-        }
-        if (file && (!file.size || file.size > 10 * 1024 * 1024)) {
-            notify(message, "내용이 있는 10MB 이하 파일을 선택해 주세요.", "error");
+        if (file && fileError(file)) {
+            notify(message, fileError(file), "error");
             return;
         }
         submit.disabled = true;
+        fileInput.disabled = true;
         submit.textContent = file ? "파일을 읽는 중…" : "입력 내용을 여는 중…";
         try {
             const contract = file ? await extractFile(file) : fields;
@@ -199,6 +301,7 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (error) {
             notify(message, /^HTTP /.test(error.message) ? errorText(error) : error.message, "error");
             submit.disabled = false;
+            fileInput.disabled = false;
             submit.textContent = "다음";
         }
     });
