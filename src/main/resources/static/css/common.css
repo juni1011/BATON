@@ -242,3 +242,35 @@ textarea:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px;
 .review-guide li + li { margin-top: 12px; }
 
 .contract-time { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.home-header-bar {
+    display: flex; flex-wrap: wrap; justify-content: space-between;
+    align-items: center;
+    max-width: 1160px;
+    margin-inline: auto;
+    padding: 6px 20px;
+    gap: 4px 12px;
+}
+.home-page .site-header { border-bottom: 3px solid var(--primary); }
+.home-page .site-header .home-header-bar nav { margin: 0; padding: 0; }
+.home-page .site-header .primary-nav { justify-content: flex-start; }
+.home-page .site-header .primary-nav a {
+    color: var(--primary);
+    font-size: clamp(15px, 1.8vw, 18px);
+    font-weight: 700;
+}
+.home-page .site-header .account-nav { margin-left: auto; }
+.home-page .intro h1 {
+    display: flex;
+    align-items: center;
+    gap: clamp(8px, 2vw, 20px);
+    font-size: clamp(28px, 5vw, 54px);
+    word-break: keep-all;
+}
+.home-page .intro-mark {
+    display: block;
+    flex: none;
+    width: clamp(76px, 15vw, 148px);
+    height: auto;
+    margin-block: -12px;
+}
