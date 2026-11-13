@@ -91,7 +91,7 @@ function SupportApp() {
     const [showNationalMap, setShowNationalMap] = useState(false);
     const resultsRef = useRef(null);
     const ageRef = useRef(null);
-    const submitting = useRef(false);
+    const latestSearch = useRef(0);
     const profileRef = useRef(profile);
     const advanceTimer = useRef(null);
     const regionFocusFrame = useRef(null);
@@ -144,6 +144,7 @@ function SupportApp() {
     function selectRegion(value) {
         setShowNationalMap(false);
         update('sido', value);
+        runSearch(category, false);
         if (!value) return;
         regionFocusFrame.current = requestAnimationFrame(() => {
             regionFocusFrame.current = null;
@@ -185,29 +186,33 @@ function SupportApp() {
 
     /** 분야 버튼: 선택한 분야로 같은 조건을 다시 찾는다. 서버가 전체 정책에서 그 분야만 골라 마감 임박 순 상위 50건을 준다. */
     function chooseCategory(value) {
-        if (busy || value === category) return;
         setCategory(value);
         runSearch(value, false);
     }
 
     async function runSearch(selectedCategory, scrollToResults) {
         cancelAdvance();
-        if (submitting.current) return;
-        const age = profile.age === '' ? null : Number(profile.age);
+        const requestId = ++latestSearch.current;
+        const current = profileRef.current;
+        const age = current.age === '' ? null : Number(current.age);
         if (age !== null && (!Number.isInteger(age) || age < 0 || age > 120)) {
+            setBusy(false);
+            setMatches([]);
             setMessage('만 나이는 0세부터 120세까지 정수로 입력해 주세요.');
             ageRef.current?.focus();
             return;
         }
         const next = { age };
-        for (const key of FIELDS) next[key] = profile[key].trim() || null;
-        submitting.current = true;
+        for (const key of FIELDS) next[key] = current[key].trim() || null;
+        setMatches([]);
+        setSearched(false);
         setBusy(true);
         setMessage('');
         try {
             const filter = selectedCategory || null;
             window.Easyton.saveUserProfile({ ...next, category: filter });
             const response = await window.Easyton.postJson('/api/supports/match', { profile: next, category: filter });
+            if (requestId !== latestSearch.current) return;
             if (!Array.isArray(response)) throw new Error('Invalid response');
             window.Easyton.saveSupportMatches(response);
             setMatches(response);
@@ -222,10 +227,9 @@ function SupportApp() {
                 });
             });
         } catch (error) {
-            setMessage(window.EasytonUI.errorText(error));
+            if (requestId === latestSearch.current) setMessage(window.EasytonUI.errorText(error));
         } finally {
-            submitting.current = false;
-            setBusy(false);
+            if (requestId === latestSearch.current) setBusy(false);
         }
     }
 
@@ -307,17 +311,17 @@ function SupportApp() {
                 <div><strong>나에게 맞는 지원사업, 만나볼까요?</strong><p>입력한 조건으로 추천 결과를 확인하세요.</p></div>
                 <div className="support-category-field">
                     <SelectField id="category" label="지원 분야 (카테고리)" value={category} options={CATEGORIES}
-                        placeholder="전체" onChange={setCategory} />
+                        placeholder="전체" onChange={chooseCategory} />
                 </div>
                 <button type="submit" className="btn primary" id="submit" disabled={busy}>{busy ? '추천 찾는 중…' : '추천 받기'}<span aria-hidden="true">→</span></button>
             </div>
         </form>
         <div id="message" className="notice error support-message" role="alert" hidden={!message}>{message}</div>
         <section id="results" className="support-results" ref={resultsRef} aria-live="polite" aria-label="지원사업 추천 결과">
-            {(matches.length > 0 || searched) && <div className="support-category-tabs" role="group" aria-label="지원 분야별로 보기">
+            <div className="support-category-tabs" role="group" aria-label="지원 분야별로 보기">
                 {['', ...CATEGORIES].map(value => <button type="button" key={value || 'all'} className="support-category-tab"
-                    aria-pressed={category === value} disabled={busy} onClick={() => chooseCategory(value)}>{value || '전체'}</button>)}
-            </div>}
+                    aria-pressed={category === value} onClick={() => chooseCategory(value)}>{value || '전체'}</button>)}
+            </div>
             {matches.length > 0 ? <><div className="support-results-heading"><h2 id="results-title">추천 결과 <span>{matches.length}건</span></h2><p>내 조건을 바탕으로 확인한 지원사업이에요.</p>
                     <p id="source-notice" className="support-result-source">{sampleResults ? '예시 데이터' : '온통청년 청년정책 정보 · 최대 50건'}</p>
                     {!sampleResults && <p>소득·신분·거주지 등 세부 자격은 상세 공고에서 확인해 주세요.</p>}
