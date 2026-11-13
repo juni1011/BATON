@@ -91,7 +91,19 @@ window.EasytonUI = (() => {
         }
     });
 
-    return Object.freeze({ DAYS, DAY_LABELS, LEVEL_LABELS, VERDICT_LABELS, EVENT_LABELS, USER_EVENT_TYPES,
+    function contractTime(id) {
+        const [hour, minute] = document.getElementById(id).querySelectorAll("select");
+        return {
+            get value() { return hour.value ? hour.value + ":" + minute.value : ""; },
+            set value(time) {
+                const [hours, minutes] = (time || "").split(":");
+                hour.value = hours?.padStart(2, "0") || "";
+                minute.value = minutes || "00";
+            }
+        };
+    }
+
+    return Object.freeze({ contractTime, DAYS, DAY_LABELS, LEVEL_LABELS, VERDICT_LABELS, EVENT_LABELS, USER_EVENT_TYPES,
         h, won, dateLabel, todayIso, errorText, notify, saveGeneratedEvents, analyze });
 })();
 

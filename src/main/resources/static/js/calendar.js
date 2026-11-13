@@ -141,10 +141,6 @@ document.addEventListener("DOMContentLoaded", () => {
         for (let value = 0; value < 60; value++) {
             minute.add(new Option(pad(value) + "분", pad(value)));
         }
-        hour.addEventListener("change", () => {
-            minute.disabled = hour.value === "";
-            if (minute.disabled) minute.value = "00";
-        });
     }
 
     function readTime(prefix) {
@@ -204,8 +200,6 @@ document.addEventListener("DOMContentLoaded", () => {
         year = Number(date.slice(0, 4));
         month = Number(date.slice(5, 7));
         addForm.reset();
-        field("startMinute").disabled = true;
-        field("endMinute").disabled = true;
         renderAll();
     });
 

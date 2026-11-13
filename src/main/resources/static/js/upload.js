@@ -4,8 +4,36 @@
 document.addEventListener("DOMContentLoaded", () => {
     const { errorText, notify } = EasytonUI;
     const form = document.getElementById("upload-form");
+    const times = {
+        startTime: EasytonUI.contractTime("startTime"),
+        endTime: EasytonUI.contractTime("endTime")
+    };
+
+    async function extractFile(file) {
+        if (/\.(png|jpe?g|webp)$/i.test(file.name)) {
+            if (!window.Tesseract) {
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement("script");
+                    script.src = "https://cdn.jsdelivr.net/npm/tesseract.js@6.0.1/dist/tesseract.min.js";
+                    script.onload = resolve;
+                    script.onerror = () => { script.remove(); reject(new Error("사진 인식 도구를 불러오지 못했어요.")); };
+                    document.head.append(script);
+                });
+            }
+            const worker = await window.Tesseract.createWorker(["kor", "eng"], 1, { errorHandler: () => {} });
+            let text;
+            try {
+                const result = await worker.recognize(file);
+                text = result.data.text.trim();
+            } finally {
+                await worker.terminate();
+            }
+            if (!text) throw new Error("사진에서 글자를 찾지 못했어요. 글자가 선명한 사진으로 다시 시도해 주세요.");
+            return Easyton.extractContract({ text });
+        }
+        return Easyton.extractContract({ text: await file.text() });
+    }
     const fileInput = document.getElementById("file");
-    const textInput = document.getElementById("text");
     const message = document.getElementById("message");
     const submit = document.getElementById("submit");
 
@@ -141,24 +169,37 @@ document.addEventListener("DOMContentLoaded", () => {
     form.addEventListener("submit", async event => {
         event.preventDefault();
         const file = fileInput.files[0] || null;
-        const text = textInput.value.trim();
-        if (!file && !text) {
-            notify(message, "파일을 선택하거나 계약서 내용을 붙여넣어 주세요.", "error");
+        const fields = {};
+        for (const id of ["employerName","workplace","hourlyWage","payDay","startTime","endTime"]) {
+            const input = times[id] || document.getElementById(id);
+            const value = input.value.trim();
+            if (value) fields[id] = input.type === "number" ? Number(value) : value;
+        }
+        if (!file && Object.keys(fields).length === 0) {
+            notify(message, "파일을 선택하거나 계약 항목을 하나 이상 입력해 주세요.", "error");
+            return;
+        }
+        if (file && !/\.(txt|png|jpe?g|webp)$/i.test(file.name)) {
+            notify(message, "이 파일 형식은 읽을 수 없어요. TXT, PNG, JPG, WebP 파일을 고르거나 아래에 직접 입력해 주세요.", "error");
+            return;
+        }
+        if (file && (!file.size || file.size > 10 * 1024 * 1024)) {
+            notify(message, "내용이 있는 10MB 이하 파일을 선택해 주세요.", "error");
             return;
         }
         submit.disabled = true;
-        submit.textContent = "추출하는 중…";
+        submit.textContent = file ? "파일을 읽는 중…" : "입력 내용을 여는 중…";
         try {
-            const contract = await Easyton.extractContract(file ? { file } : { text });
+            const contract = file ? await extractFile(file) : fields;
             Easyton.saveContractInfo(contract);
             // 이전 계약의 리포트와 계약 일정은 더 이상 맞지 않으므로 지운다. 직접 추가한 일정은 남긴다.
             Easyton.saveCheckReport(null);
             EasytonUI.saveGeneratedEvents([]);
-            location.href = "/confirm.html?from=upload";
+            location.href = file ? "/confirm.html?from=upload" : "/confirm.html";
         } catch (error) {
-            notify(message, errorText(error), "error");
+            notify(message, /^HTTP /.test(error.message) ? errorText(error) : error.message, "error");
             submit.disabled = false;
-            submit.textContent = "항목 추출하기";
+            submit.textContent = "다음";
         }
     });
 });

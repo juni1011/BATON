@@ -27,7 +27,7 @@ function regionTransform(region, focused) {
     };
 }
 
-export default function RegionMap({ sido = "", district = "", zoomed = false, onSelectRegion, onSelectDistrict }) {
+export default function RegionMap({ sido = "", district = "", zoomed = false, onSelectRegion, onSelectDistrict, onPreview }) {
     const titleId = useId();
     const descriptionId = useId();
     const [readyToZoom, setReadyToZoom] = useState(false);
@@ -117,6 +117,8 @@ export default function RegionMap({ sido = "", district = "", zoomed = false, on
                                 aria-pressed={item.code === region?.code}
                                 aria-disabled={!canSelectRegion}
                                 aria-hidden={focused || undefined}
+                                onPointerLeave={() => onPreview?.(null)}
+                                onPointerEnter={event => { if (canSelectRegion && event.pointerType === "mouse") onPreview?.({ sido: item.name }); }}
                                 onClick={event => selectWithPointer(event, canSelectRegion, onSelectRegion, item.name)}
                                 onKeyDown={event => selectWithKeyboard(event, canSelectRegion, onSelectRegion, item.name)}
                             >
@@ -139,6 +141,8 @@ export default function RegionMap({ sido = "", district = "", zoomed = false, on
                                 aria-label={item.name}
                                 aria-pressed={item.code === selectedDistrict?.code}
                                 aria-disabled={!canSelectDistrict}
+                                onPointerLeave={() => onPreview?.(null)}
+                                onPointerEnter={event => { if (canSelectDistrict && event.pointerType === "mouse") onPreview?.({ sido: region.name, district: item.name }); }}
                                 onClick={event => selectWithPointer(event, canSelectDistrict, onSelectDistrict, item.name)}
                                 onKeyDown={event => selectWithKeyboard(event, canSelectDistrict, onSelectDistrict, item.name)}
                             >

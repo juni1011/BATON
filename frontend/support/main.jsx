@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { AgeIllustration, StatusIllustration, HousingIllustration, IncomeIllustration } from './visuals.jsx';
 import { REGIONS, getDistricts, RegionMap } from './RegionMap.jsx';
+import { districtAtLocation } from './korea-regions.js';
 
 const FIELDS = ['sido', 'sigungu', 'status', 'housing', 'householdIncomeLevel'];
 const STATUS = ['대학생', '구직자', '재직자', '기타'];
@@ -79,6 +80,10 @@ function SupportApp() {
     const [message, setMessage] = useState('');
     const [busy, setBusy] = useState(false);
     const [showNationalMap, setShowNationalMap] = useState(false);
+    const [mapPreview, setMapPreview] = useState(null);
+    const [locationMessage, setLocationMessage] = useState('');
+    const [locating, setLocating] = useState(false);
+    const locationRequest = useRef(0);
     const resultsRef = useRef(null);
     const ageRef = useRef(null);
     const submitting = useRef(false);
@@ -130,7 +135,52 @@ function SupportApp() {
     };
     const select = (key, value) => update(key, value, { advance: true });
 
+    function selectDistrict(value) {
+        setMapPreview(null);
+        locationRequest.current++;
+        setLocating(false);
+        setLocationMessage('');
+        setShowNationalMap(false);
+        update('sigungu', value);
+    }
+
+    function findCurrentLocation() {
+        setMapPreview(null);
+        if (!navigator.geolocation) {
+            setLocationMessage('이 브라우저에서 위치를 확인할 수 없어요. 거주 지역을 직접 골라 주세요.');
+            return;
+        }
+        cancelAdvance();
+        const request = ++locationRequest.current;
+        setLocating(true);
+        setLocationMessage('현재 위치를 확인하는 중이에요…');
+        navigator.geolocation.getCurrentPosition(({ coords }) => {
+            if (request !== locationRequest.current) return;
+            const district = districtAtLocation(coords.longitude, coords.latitude);
+            const region = REGIONS.find(item => item.code === district?.sidoCode);
+            setLocating(false);
+            if (!region) {
+                setLocationMessage('현재 위치의 시·군·구를 찾지 못했어요. 거주 지역을 직접 골라 주세요.');
+                return;
+            }
+            const next = { ...profileRef.current, sido: region.name, sigungu: district.name };
+            profileRef.current = next;
+            setProfile(next);
+            setMessage('');
+            setShowNationalMap(false);
+            setLocationMessage('현재 위치 주변을 선택했어요. 실제 거주지와 다르면 바꿔 주세요.');
+        }, () => {
+            if (request !== locationRequest.current) return;
+            setLocating(false);
+            setLocationMessage('위치를 확인하지 못했어요. 브라우저 위치 권한을 확인하거나 거주 지역을 직접 골라 주세요.');
+        }, { timeout: 10000 });
+    }
+
     function selectRegion(value) {
+        setMapPreview(null);
+        locationRequest.current++;
+        setLocating(false);
+        setLocationMessage('');
         setShowNationalMap(false);
         update('sido', value);
         if (!value) return;
@@ -239,19 +289,21 @@ function SupportApp() {
                 </div>
                 <p className="support-input-hint" id="age-hint">0~120세 · 입력 후 잠시 기다리거나 Enter를 누르면 다음 빈 항목으로 이동해요.</p>
             </Step>
-            <Step number={2} title="거주 지역" description="시·도를 먼저 선택한 뒤, 확대된 지도에서 살고 있는 시·군·구를 골라주세요." isMap
+            <Step number={2} title="거주 지역" description="현재 위치를 찾거나 시·도와 시·군·구를 직접 골라 주세요." isMap
                 visual={<div className="support-region-map">
                     {regionKnown && <button type="button" className="btn small support-map-back" onClick={() => {
-                        cancelAdvance(); setShowNationalMap(current => !current);
+                        cancelAdvance(); setMapPreview(null); setShowNationalMap(current => !current);
                     }}>{showNationalMap ? '선택 지역 확대' : '전국 지도 보기'}</button>}
                     <RegionMap sido={profile.sido} district={profile.sigungu} zoomed={regionKnown && !showNationalMap}
-                        onSelectRegion={selectRegion} onSelectDistrict={value => select('sigungu', value)} />
+                        onSelectRegion={selectRegion} onSelectDistrict={selectDistrict} onPreview={setMapPreview} />
                 </div>}
-                caption={profile.sigungu || profile.sido || '대한민국'} detail={profile.sido ? `${profile.sido}${profile.sigungu ? ' · ' + profile.sigungu : ''}` : '지도나 오른쪽 선택창에서 거주 지역을 선택해 주세요'}>
+                caption={mapPreview?.district || mapPreview?.sido || profile.sigungu || profile.sido || '대한민국'} detail={mapPreview ? [mapPreview.sido, mapPreview.district].filter(Boolean).join(' · ') : profile.sido ? `${profile.sido}${profile.sigungu ? ' · ' + profile.sigungu : ''}` : '지도나 오른쪽 선택창에서 거주 지역을 선택해 주세요'}>
+                <button type="button" className="btn small" onClick={findCurrentLocation} disabled={locating}>현재 위치로 찾기</button>
+                <p className="support-input-hint" role="status">{locationMessage}</p>
                 <div className="support-region-fields">
                 <SelectField id="sido" label="거주 시·도" value={profile.sido} options={REGIONS} onChange={selectRegion} />
                 {districts.length || !profile.sido ? <SelectField id="sigungu" label="시·군·구" value={profile.sigungu} options={districts}
-                    disabled={!profile.sido} placeholder={profile.sido ? '선택해 주세요' : '거주 시·도를 먼저 선택해 주세요'} onChange={value => select('sigungu', value)} />
+                    disabled={!profile.sido} placeholder={profile.sido ? '선택해 주세요' : '거주 시·도를 먼저 선택해 주세요'} onChange={selectDistrict} />
                     : <div className="support-field"><label htmlFor="sigungu">시·군·구</label><input id="sigungu" value={profile.sigungu} placeholder={profile.sido ? '시·군·구를 입력해 주세요' : '거주 시·도를 먼저 선택해 주세요'} disabled={!profile.sido}
                         onChange={event => update('sigungu', event.target.value, { advance: true, delay: 1100 })}
                         onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); advanceFrom('sigungu', profileRef.current, 0); } }} /></div>}
