@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>점검 리포트 | 알바 첫걸음</title>
-    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/common.css?v=first-step-wordmark">
     <link rel="icon" href="/images/logo-b2-mark.svg" type="image/svg+xml">
     <meta name="theme-color" content="#9B3F3F">
     <script src="/js/common.js" defer></script>
-    <script src="/js/ui.js" defer></script>
+    <script src="/js/ui.js?v=first-step-nav" defer></script>
     <script src="/js/report.js" defer></script>
 </head>
 <body>
@@ -20,10 +20,10 @@
             </nav>
         </div>
         <nav class="primary-nav" aria-label="공통 메뉴">
-            <a class="site-name" href="/index.html" aria-label="알바 첫걸음 홈"><img class="site-logo" src="/images/logo-b2.svg" alt="알바 첫걸음" width="220" height="48"></a>
-            <a href="/upload.html">계약서 점검</a>
-            <a href="/support.html">지원사업 추천</a>
-            <a href="/calendar.html">캘린더</a>
+            <a class="site-name" href="/index.html" aria-label="첫걸음 홈"><img class="site-mark" src="/images/logo-b2-mark.svg" alt="" width="56" height="56"><span class="site-wordmark">첫걸음</span></a>
+            <a href="/upload.html?v=first-step-nav">계약서 점검</a>
+            <a href="/support.html?v=first-step-nav">지원사업 추천</a>
+            <a href="/calendar.html?v=first-step-nav">캘린더</a>
         </nav>
     </header>
     <main class="contract-review">
@@ -41,7 +41,7 @@
         <div id="message" class="notice" role="alert" hidden></div>
         <section id="empty" class="card empty" hidden>
             <p>아직 점검한 계약서가 없습니다.</p>
-            <a class="btn primary" href="/upload.html">계약서 업로드하기</a>
+            <a class="btn primary" href="/upload.html?v=first-step-nav">계약서 업로드하기</a>
         </section>
         <div id="report" hidden>
             <section class="card review-guide" id="before-signing" aria-labelledby="before-signing-title" hidden>
@@ -54,8 +54,8 @@
             <div class="card">
                 <h2>다음 단계</h2>
                 <div class="row">
-                    <a class="btn primary" href="/calendar.html">근무·급여 일정 보기</a>
-                    <a class="btn" href="/support.html">지원사업 추천 받기</a>
+                    <a class="btn primary" href="/calendar.html?v=first-step-nav">근무·급여 일정 보기</a>
+                    <a class="btn" href="/support.html?v=first-step-nav">지원사업 추천 받기</a>
                 </div>
             </div>
             <p class="muted small"><a href="https://minimumwage.go.kr/minWage/policy/decisionMain.do">최저임금위원회 연도별 고시</a> · 2026년 11월 11일 확인</p>

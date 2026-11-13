@@ -87,7 +87,7 @@ window.EasytonUI = (() => {
     document.addEventListener("DOMContentLoaded", () => {
         const path = location.pathname === "/" ? "/index.html" : location.pathname;
         for (const link of document.querySelectorAll("nav a")) {
-            if (link.getAttribute("href") === path) link.setAttribute("aria-current", "page");
+            if (link.pathname === path && link.origin === location.origin) link.setAttribute("aria-current", "page");
         }
     });
 
