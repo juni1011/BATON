@@ -80,6 +80,11 @@ function SelectField({ id, label, value, options, onChange, placeholder = '선�
     </div>;
 }
 
+function mountRecommendation(host) {
+    const panel = document.getElementById('support-ai-panel');
+    if (host && panel) host.appendChild(panel);
+}
+
 function SupportApp() {
     const [profile, setProfile] = useState(loadProfile);
     const [matches, setMatches] = useState(loadMatches);
@@ -193,6 +198,7 @@ function SupportApp() {
     async function runSearch(selectedCategory, scrollToResults) {
         cancelAdvance();
         const requestId = ++latestSearch.current;
+        window.dispatchEvent(new CustomEvent('support-selection'));
         const current = profileRef.current;
         const age = current.age === '' ? null : Number(current.age);
         if (age !== null && (!Number.isInteger(age) || age < 0 || age > 120)) {
@@ -216,6 +222,7 @@ function SupportApp() {
             if (!Array.isArray(response)) throw new Error('Invalid response');
             window.Easyton.saveSupportMatches(response);
             setMatches(response);
+            window.dispatchEvent(new CustomEvent('support-selection', { detail: { profile: next, category: filter } }));
             setSearched(true);
             if (scrollToResults) requestAnimationFrame(() => {
                 const results = resultsRef.current;
@@ -322,6 +329,7 @@ function SupportApp() {
                 {['', ...CATEGORIES].map(value => <button type="button" key={value || 'all'} className="support-category-tab"
                     aria-pressed={category === value} onClick={() => chooseCategory(value)}>{value || '전체'}</button>)}
             </div>
+            <div ref={mountRecommendation} />
             {matches.length > 0 ? <><div className="support-results-heading"><h2 id="results-title">추천 결과 <span>{matches.length}건</span></h2><p>내 조건을 바탕으로 확인한 지원사업이에요.</p>
                     <p id="source-notice" className="support-result-source">{sampleResults ? '예시 데이터' : '온통청년 청년정책 정보 · 최대 50건'}</p>
                     {!sampleResults && <p>소득·신분·거주지 등 세부 자격은 상세 공고에서 확인해 주세요.</p>}
