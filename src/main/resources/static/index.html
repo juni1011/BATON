@@ -3,47 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>홈 | 알바 첫걸음</title>
-    <link rel="stylesheet" href="/css/common.css">
+    <title>홈 | 첫걸음</title>
+    <link rel="stylesheet" href="/css/common.css?v=home-track-gap">
     <link rel="icon" href="/images/logo-b2-mark.svg" type="image/svg+xml">
     <meta name="theme-color" content="#9B3F3F">
     <script src="/js/common.js" defer></script>
-    <script src="/js/ui.js" defer></script>
-    <script src="/js/index.js" defer></script>
+    <script src="/js/ui.js?v=first-step-nav" defer></script>
+    <script src="/js/index.js?v=home-compact-programs" defer></script>
 </head>
 <body class="portal home-page">
-    <header class="site-header"><nav aria-label="공통 메뉴">
-        <a class="site-name" href="/index.html" aria-label="알바 첫걸음 홈"><img class="site-logo" src="/images/logo-b2.svg" alt="알바 첫걸음" width="220" height="48"></a>
-        <a href="/upload.html">계약서 점검</a>
-        <a href="/support.html">지원사업 추천</a>
-        <a href="/calendar.html">캘린더</a>
-        <a href="/signin.html">로그인</a>
-    </nav></header>
+    <header class="site-header">
+        <div class="home-header-bar">
+            <nav class="account-nav" aria-label="계정 메뉴">
+                <a href="/signin.html">로그인</a>
+                <a href="/signup.html">회원가입</a>
+            </nav>
+        </div>
+    </header>
     <main id="main">
         <section class="intro">
-            <h1>알바 첫걸음</h1>
-            <p>첫 알바 계약서의 근로조건을 확인하고, 급여일과 신청 마감일을 한곳에서 관리하세요.</p>
-            <div class="row">
-                <a class="btn primary" href="/upload.html">계약서 점검 시작</a>
-                <a class="btn" href="/calendar.html">내 일정 보기</a>
-            </div>
+            <h1><img class="intro-mark" src="/images/logo-b2-mark.svg" alt="" width="128" height="128"><span>첫걸음</span></h1>
+            <p><strong>첫 알바, 계약서부터 확인하세요.</strong><br>시급과 근무시간을 점검하고, 지원사업과 급여일을 챙기세요.</p>
         </section>
-        <nav class="journey" aria-label="이용 단계">
-            <ol>
-                <li><a href="/upload.html">계약서 입력·확인</a></li>
-                <li><a href="/report.html">점검 리포트</a></li>
-                <li><a href="/support.html">지원사업 추천</a></li>
-                <li><a href="/calendar.html">일정 관리</a></li>
-            </ol>
+        <nav class="home-actions" aria-label="주요 기능">
+            <a class="btn" href="/upload.html?v=first-step-nav">계약서 점검 시작</a>
+            <a class="btn" href="/support.html?v=first-step-nav">지원사업 추천</a>
+            <a class="btn" href="/calendar.html?v=first-step-nav">캘린더</a>
         </nav>
+        <section class="card home-programs" aria-labelledby="summary-title">
+            <div class="section-heading">
+                <h2 id="summary-title">지원사업 공고</h2>
+                <a href="/support.html?v=first-step-nav">지원사업 찾아보기</a>
+            </div>
+            <p class="home-program-count"><strong id="program-count">0</strong>건 · 전체</p>
+            <div id="program-sort" class="row" role="group" aria-label="공고 정렬">
+                <button type="button" class="btn small" data-sort="recent" aria-pressed="true">NEW 신규</button>
+                <button type="button" class="btn small" data-sort="deadline" aria-pressed="false">마감 임박</button>
+            </div>
+            <div id="summary" aria-live="polite"></div>
+        </section>
         <div class="home-overview">
-            <section class="card" aria-labelledby="summary-title">
-                <div class="section-heading"><h2 id="summary-title">내 추천 결과</h2><a href="/support.html">전체 보기</a></div>
-                <div id="summary"></div>
-            </section>
             <section class="card" aria-labelledby="upcoming-title">
-                <div class="section-heading"><h2 id="upcoming-title">다가오는 일정</h2><a href="/calendar.html">캘린더</a></div>
-                <div id="upcoming"></div>
+                <div class="section-heading"><h2 id="upcoming-title">일정 알림</h2><a href="/calendar.html?v=first-step-nav">캘린더 열기</a></div>
+                <div class="home-card-content"><div id="upcoming"></div><img class="home-card-art" src="/images/home-notice-bell.svg" alt="" width="104" height="104"></div>
+            </section>
+            <section class="card home-help" aria-labelledby="help-title">
+                <div class="section-heading"><h2 id="help-title">이용 문의</h2></div>
+                <div class="home-card-content"><div>
+                <details>
+                    <summary>계약서 사진도 올릴 수 있나요?</summary>
+                    <p>PNG·JPG·WebP 사진이나 TXT 파일을 올릴 수 있어요. 종이 계약서를 보면서 직접 입력할 수도 있어요.</p>
+                    <a href="/upload.html?v=first-step-nav">계약서 점검 열기</a>
+                </details>
+                <details>
+                    <summary>내 일정을 어디에서 추가하나요?</summary>
+                    <p>캘린더에서 날짜를 고르고 ‘일정 추가’를 눌러 주세요.</p>
+                    <a href="/calendar.html?v=first-step-nav">캘린더 열기</a>
+                </details>
+                </div><img class="home-card-art" src="/images/home-help-conversation.svg" alt="" width="104" height="104"></div>
             </section>
         </div>
         <div class="row between">

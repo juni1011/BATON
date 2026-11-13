@@ -25,7 +25,7 @@ footer { padding: 24px 20px; text-align: center; border-top: 1px solid var(--lin
 h1 { margin: 0 0 4px; font-size: 28px; }
 h2 { margin: 0 0 12px; font-size: 19px; }
 h3 { margin: 0 0 6px; font-size: 16px; }
-.lead { margin: 0 0 24px; color: var(--muted); }
+.lead { margin: 0 0 12px; color: var(--muted); }
 .muted { color: var(--muted); }
 .small { font-size: 14px; }
 [hidden] { display: none !important; }
@@ -72,7 +72,12 @@ input[type="checkbox"], input[type="radio"] { width: auto; accent-color: var(--p
 
 /* 홈과 캘린더 */
 .portal { background: var(--bg); }
-.site-header { border-top: 3px solid var(--accent); }
+.site-account { border-bottom: 3px solid var(--accent); }
+.site-header .account-nav {
+    justify-content: flex-end; gap: 4px; padding-block: 3px; font-size: 13px;
+}
+.site-header .account-nav a { padding: 4px 8px; }
+.site-header .nav-user { align-self: center; color: var(--muted); }
 .portal nav, .portal main, .site-header nav { max-width: 1160px; }
 .portal nav, .site-header nav { align-items: center; gap: 4px 14px; }
 .portal nav a, .site-header nav a { border-radius: 4px; }
@@ -197,3 +202,152 @@ textarea:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px;
 .journey { margin: 0 0 20px; padding: 0; }
 .journey ol { display: flex; flex-wrap: wrap; gap: 10px 28px; margin: 0; padding-left: 24px; }
 .journey a { padding: 0; color: var(--primary); text-decoration: underline; }
+
+/* 개인 일정 추가 */
+#add-form .schedule-times { display: grid; gap: 2px; }
+#add-form .schedule-clock { display: flex; align-items: center; gap: 6px; }
+#add-form .schedule-clock select, .contract-time select {
+    width: auto;
+    min-width: 4.75rem;
+    min-height: 44px;
+    padding: 6px 10px;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    cursor: pointer;
+}
+#add-form .schedule-clock select:hover, .contract-time select:hover { background: var(--primary-soft); }
+#add-form .schedule-clock select:disabled { color: var(--muted); cursor: default; }
+
+/* 계약서 점검 단계와 안내 */
+.review-steps {
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px;
+    list-style: none; padding: 0; margin: 0 0 12px;
+}
+.review-steps li {
+    display: flex; align-items: center; gap: 6px; padding: 8px 4px;
+    border-bottom: 2px solid var(--line); font-size: 13px; color: var(--muted);
+}
+.review-steps li[aria-current="step"] {
+    border-color: var(--primary); color: var(--primary); font-weight: 700;
+}
+.review-guide { border-left: 3px solid var(--accent); }
+.review-guide dl {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 175px), 1fr));
+    gap: 12px 22px; margin: 0 0 12px;
+}
+.review-guide dt { font-weight: 700; }
+.review-guide dd, .review-guide li p { margin: 4px 0 0; color: var(--muted); }
+.review-guide ol { margin: 0; padding-left: 24px; }
+.review-guide li + li { margin-top: 12px; }
+
+.contract-time { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.home-header-bar {
+    display: flex; flex-wrap: wrap; justify-content: space-between;
+    align-items: center;
+    max-width: 1160px;
+    margin-inline: auto;
+    padding: 6px 20px;
+    gap: 4px 12px;
+}
+.home-page .site-header { border-bottom: 3px solid var(--primary); }
+.home-page .site-header .home-header-bar nav { margin: 0; padding: 0; }
+.home-page .site-header .home-header-bar .account-nav { margin-left: auto; }
+.home-page main { padding-top: 26px; }
+@media (max-width: 640px) { .home-page main { padding-top: 18px; } }
+.home-page .intro { margin-bottom: 12px; padding-block: clamp(20px, 4vw, 44px); }
+.home-page .intro h1 {
+    display: flex;
+    align-items: center;
+    gap: clamp(8px, 2vw, 20px);
+    font-size: clamp(27px, 4.75vw, 50px);
+    word-break: keep-all;
+}
+.home-page .intro-mark {
+    display: block;
+    flex: none;
+    width: clamp(70px, 14vw, 136px);
+    height: auto;
+    margin-block: -12px;
+}
+
+.home-page .home-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(6px, 1.5vw, 16px);
+    align-items: stretch;
+    margin: 0 0 12px;
+    padding: 0;
+}
+.home-page .home-actions .btn {
+    justify-content: center;
+    align-items: center;
+    min-height: 42px;
+    padding: 7px 6px;
+    text-align: center;
+    font-size: clamp(13px, 2vw, 18px);
+    word-break: keep-all;
+}
+
+.home-page .home-actions .btn:hover,
+.home-page .home-actions .btn:focus-visible {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+.home-page .intro p { word-break: keep-all; }
+
+.home-page .home-overview .event { align-items: center; }
+.home-page .home-overview .event .body { min-width: 0; overflow-wrap: anywhere; }
+.home-page #summary .event .badge { margin-left: auto; flex-shrink: 0; }
+.home-event-date {
+    display: inline-grid;
+    place-content: center;
+    flex: none;
+    min-width: 54px;
+    min-height: 46px;
+    padding: 4px;
+    background: var(--primary-soft);
+    border-radius: 6px;
+    color: var(--primary);
+    font-weight: 700;
+}
+.home-page .home-overview .event .body .badge { margin-right: 6px; }
+
+.home-page .home-programs { padding: 10px 14px; margin-bottom: 12px; }
+.home-programs .section-heading { margin-bottom: 6px; }
+.home-program-list { list-style: none; margin: 4px 0 0; padding: 0; }
+.home-program-list .event { align-items: baseline; justify-content: space-between; flex-wrap: wrap; padding-block: 6px; }
+.home-program-list .event:first-child { border-top: 0; }
+#program-sort[hidden] { display: none; }
+.home-program-count { margin: 4px 0 0; color: var(--muted); }
+.home-program-count strong { font-size: 1.5em; color: var(--primary); }
+#program-sort { gap: 16px; border-bottom: 1px solid var(--line); }
+#program-sort .btn {
+    border: 0;
+    border-bottom: 3px solid transparent;
+    border-radius: 0;
+    background: transparent;
+    color: var(--muted);
+    padding: 9px 4px;
+}
+#program-sort [aria-pressed="true"] { border-bottom-color: var(--primary); color: var(--primary); }
+#program-sort .btn:hover { color: var(--primary); }
+.home-help details { padding-block: 10px; }
+.home-help details + details { border-top: 1px solid var(--line); }
+.home-help summary { cursor: pointer; font-weight: 650; }
+.home-help p { margin: 8px 0 4px; }
+
+.site-name .site-mark { display: block; width: 56px; height: 56px; }
+.site-name .site-wordmark { margin-left: 8px; font-size: 27px; font-weight: 800; }
+
+.home-page .home-overview { gap: 12px; }
+.home-page .home-overview > .card { padding: 12px 14px; }
+.home-card-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(54px, 16%, 84px);
+    align-items: start;
+    gap: 12px;
+}
+.home-card-art { display: block; width: 100%; height: auto; }
