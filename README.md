@@ -39,7 +39,7 @@ docker compose up -d --wait
 - 사진은 디스크에 저장하지 않고 메모리에서 바로 전송하며, 사진·추출 내용은 로그에 남기지 않습니다.
 - 결과는 JSON 스키마로 받고, 시급·지급일처럼 범위를 벗어난 값은 추정하지 않고 비웁니다. 분석에는 보통 10~20초가 걸리고 180초가 넘으면 504입니다.
 - 설정: `GEMINI_API_KEY`(필수), `GEMINI_MODEL`(기본 `gemini-3.5-flash`), `CONTRACT_IMAGE_ENABLED=false`(사진 분석 끄기).
-- 실제 Gemini로 확인하려면 `RUN_GEMINI_IT=1 GEMINI_API_KEY=... ./gradlew test --tests '*ContractImageGeminiIT'`를 실행합니다.
+- 실제 Gemini로 확인하려면 `RUN_GEMINI_IT=1 CONTRACT_IMAGE_GEMINI_API_KEY=... ./gradlew test --tests '*ContractImageGeminiIT'`를 실행합니다.
 
 MySQL의 데이터베이스·사용자 이름은 `easyton`, 포트는 `3306`입니다. `app_users` 테이블은 서버 시작 시 `schema.sql`로 생성하며, 기존 테이블과 회원 데이터는 유지합니다. 스키마가 변경되면 별도 마이그레이션이 필요합니다.
 `docker compose down`은 DB 컨테이너를 종료하지만 볼륨의 회원 데이터는 보존합니다. DB 비밀번호는 볼륨 최초 생성 시 적용되므로, 이미 생성한 DB의 비밀번호를 변경하려면 MySQL에서도 변경해야 합니다.

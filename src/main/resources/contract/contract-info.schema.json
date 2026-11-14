@@ -123,6 +123,199 @@
    "items": {
     "type": "string"
    }
+  },
+  "workTimes": {
+   "type": [
+    "object",
+    "null"
+   ],
+   "properties": {
+    "MONDAY": {
+     "type": [
+      "object",
+      "null"
+     ],
+     "properties": {
+      "startTime": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "endTime": {
+       "type": [
+        "string",
+        "null"
+       ]
+      }
+     },
+     "required": [
+      "startTime",
+      "endTime"
+     ],
+     "additionalProperties": false
+    },
+    "TUESDAY": {
+     "type": [
+      "object",
+      "null"
+     ],
+     "properties": {
+      "startTime": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "endTime": {
+       "type": [
+        "string",
+        "null"
+       ]
+      }
+     },
+     "required": [
+      "startTime",
+      "endTime"
+     ],
+     "additionalProperties": false
+    },
+    "WEDNESDAY": {
+     "type": [
+      "object",
+      "null"
+     ],
+     "properties": {
+      "startTime": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "endTime": {
+       "type": [
+        "string",
+        "null"
+       ]
+      }
+     },
+     "required": [
+      "startTime",
+      "endTime"
+     ],
+     "additionalProperties": false
+    },
+    "THURSDAY": {
+     "type": [
+      "object",
+      "null"
+     ],
+     "properties": {
+      "startTime": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "endTime": {
+       "type": [
+        "string",
+        "null"
+       ]
+      }
+     },
+     "required": [
+      "startTime",
+      "endTime"
+     ],
+     "additionalProperties": false
+    },
+    "FRIDAY": {
+     "type": [
+      "object",
+      "null"
+     ],
+     "properties": {
+      "startTime": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "endTime": {
+       "type": [
+        "string",
+        "null"
+       ]
+      }
+     },
+     "required": [
+      "startTime",
+      "endTime"
+     ],
+     "additionalProperties": false
+    },
+    "SATURDAY": {
+     "type": [
+      "object",
+      "null"
+     ],
+     "properties": {
+      "startTime": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "endTime": {
+       "type": [
+        "string",
+        "null"
+       ]
+      }
+     },
+     "required": [
+      "startTime",
+      "endTime"
+     ],
+     "additionalProperties": false
+    },
+    "SUNDAY": {
+     "type": [
+      "object",
+      "null"
+     ],
+     "properties": {
+      "startTime": {
+       "type": [
+        "string",
+        "null"
+       ]
+      },
+      "endTime": {
+       "type": [
+        "string",
+        "null"
+       ]
+      }
+     },
+     "required": [
+      "startTime",
+      "endTime"
+     ],
+     "additionalProperties": false
+    }
+   },
+   "required": [
+    "MONDAY",
+    "TUESDAY",
+    "WEDNESDAY",
+    "THURSDAY",
+    "FRIDAY",
+    "SATURDAY",
+    "SUNDAY"
+   ],
+   "additionalProperties": false
   }
  },
  "required": [
@@ -143,7 +336,8 @@
   "probationMonths",
   "probationWageRate",
   "socialInsuranceMentioned",
-  "clauses"
+  "clauses",
+  "workTimes"
  ],
  "additionalProperties": false
 }

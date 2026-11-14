@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * 실제 Gemini API로 가상 계약서 사진(samples/contract1.txt를 그린 이미지)을 분석한다.
- * GEMINI_API_KEY가 필요하고 시간이 걸리므로 {@code RUN_GEMINI_IT=1}일 때만 실행한다.
+ * CONTRACT_IMAGE_GEMINI_API_KEY(테스트는 .env나 GEMINI_API_KEY를 읽지 않는다)가 필요하고 시간이 걸리므로 {@code RUN_GEMINI_IT=1}일 때만 실행한다.
  */
 @SpringBootTest
 @EnabledIfEnvironmentVariable(named = "RUN_GEMINI_IT", matches = ".+")

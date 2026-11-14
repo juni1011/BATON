@@ -69,6 +69,13 @@ class ContractImageTests {
                     } else {
                         String result = text.contains("BADJSON") ? "{oops"
                                 : RESULT.replace("HOURLY", text.contains("HUGEWAGE") ? "99999999" : "15000");
+                        if (text.contains("WEEKDAYTIMES")) {
+                            result = result.replace("\"startTime\":\"14:00\"", "\"startTime\":null")
+                                    .replace("\"endTime\":\"18:30\"", "\"endTime\":null")
+                                    .replace("\"clauses\"", "\"workTimes\":{\"MONDAY\":{\"startTime\":\"09:00\",\"endTime\":\"13:00\"},"
+                                            + "\"FRIDAY\":{\"startTime\":\"14:00\",\"endTime\":\"18:00\"},"
+                                            + "\"SUNDAY\":{\"startTime\":null,\"endTime\":null}},\"clauses\"");
+                        }
                         body = MAPPER.writeValueAsString(Map.of("candidates", List.of(Map.of("content",
                                 Map.of("parts", List.of(Map.of("text", result)))))));
                     }
@@ -116,6 +123,15 @@ class ContractImageTests {
                 .andExpect(jsonPath("$.startTime").value("14:00"))
                 .andExpect(jsonPath("$.contractStart").value("2026-11-01"))
                 .andExpect(jsonPath("$.contractEnd").value(org.hamcrest.Matchers.nullValue()));
+    }
+
+    @Test
+    void weekdaySpecificHoursAreKeptAndEmptyDaysDropped() throws Exception {
+        mvc.perform(multipart("/api/contracts/extract").file(png("WEEKDAYTIMES")).param("consent", "true"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.workTimes.MONDAY.startTime").value("09:00"))
+                .andExpect(jsonPath("$.workTimes.FRIDAY.endTime").value("18:00"))
+                .andExpect(jsonPath("$.workTimes.SUNDAY").doesNotExist());
     }
 
     @Test
