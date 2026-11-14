@@ -6,18 +6,7 @@
 
 ## 실행
 
-Java 21이 필요합니다. 일반 서버 실행(`bootRun`)에는 MySQL 8.4도 필요합니다. 프로젝트 루트에서 실행합니다.
-
-### 프론트엔드만 작업하기
-
-MySQL이나 API 키 없이 H2 메모리 DB로 화면을 실행할 수 있습니다.
-
-```sh
-./gradlew bootTestRun --args='--server.port=8081'
-```
-
-접속 주소는 http://localhost:8081/ 입니다. 이 모드는 외부 정책 조회와 AI 분석을 사용하지 않습니다. 정책 API 키가 없으므로 추천 결과는 0건이며, 서버를 종료하면 메모리 DB가 초기화됩니다.
-React 소스를 수정할 때는 별도 터미널에서 `npm run dev`를 실행하고, 변경 후 `./gradlew processResources`와 브라우저 새로고침으로 확인합니다.
+Java 21과 MySQL 8.4가 필요합니다. 프로젝트 루트에서 실행합니다.
 
 ### Docker로 MySQL 준비
 

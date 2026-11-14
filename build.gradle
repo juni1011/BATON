@@ -31,21 +31,3 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
-
-// Frontend development: run the app without MySQL or external analysis services.
-tasks.named('bootTestRun', org.springframework.boot.gradle.tasks.run.BootRun) {
-	group = 'application'
-	description = 'Run the frontend with an in-memory database and no external services.'
-	dependsOn tasks.named('classes')
-	mainClass = 'com.example.demo.DemoApplication'
-	classpath = sourceSets.main.runtimeClasspath + configurations.testRuntimeClasspath
-	javaLauncher = javaToolchains.launcherFor(java.toolchain)
-	systemProperty 'spring.datasource.url', 'jdbc:h2:mem:easyton_frontend;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE'
-	systemProperty 'spring.datasource.driver-class-name', 'org.h2.Driver'
-	systemProperty 'spring.datasource.username', 'sa'
-	systemProperty 'spring.datasource.password', ''
-	systemProperty 'youth.api.key', ''
-	systemProperty 'GEMINI_API_KEY', ''
-	systemProperty 'contract.image.gemini-api-key', ''
-	systemProperty 'contract.image.enabled', 'false'
-}
