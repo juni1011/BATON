@@ -97,7 +97,7 @@
                 history.replaceState(null, "", location.pathname + (query ? "?" + query : "") + location.hash);
             }
             const next = params.get("next");
-            const destination = ["/support.html", "/calendar.html"].includes(next) ? next : "/index.html";
+            const destination = ["/upload.html", "/confirm.html", "/report.html", "/support.html", "/calendar.html"].includes(next) ? next : "/index.html";
 
             toggle.addEventListener("click", () => {
                 const visible = password.type === "password";

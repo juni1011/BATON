@@ -52,6 +52,7 @@ window.EasytonUI = (() => {
     function errorText(error) {
         const status = /^HTTP (\d{3})/.exec(error && error.message ? error.message : "");
         if (!status) return "서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해 주세요.";
+        if (status[1] === "401") return "로그인이 필요해요. 로그인한 뒤 다시 시도해 주세요.";
         if (status[1] === "415") return "텍스트(.txt) 파일이나 PNG·JPG·WEBP·GIF 사진만 읽을 수 있습니다. PDF는 내용을 붙여넣어 주세요.";
         if (status[1] === "413") return "파일이나 내용이 너무 큽니다. 사진은 10MB 이하, 텍스트는 3만 자 이하로 줄여 주세요.";
         if (status[1] === "422") return "AI가 계약서 내용을 읽지 못했어요. 사진이라면 더 선명한 사진으로 다시 올리거나, 내용을 붙여넣어 주세요.";
