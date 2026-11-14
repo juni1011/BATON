@@ -1,7 +1,5 @@
 (() => {
     const recommendation = document.querySelector('#ai-recommendation');
-    const file = document.querySelector('#resume-file');
-    const feedback = document.querySelector('#resume-feedback');
     const retry = document.querySelector('#ai-retry');
     const links = document.querySelector('#ai-links');
     let timer;
@@ -65,26 +63,4 @@
     }
     window.addEventListener('support-selection', event => recommend(event.detail));
     retry.addEventListener('click', () => recommend(selection));
-    document.querySelector('#resume-form').addEventListener('submit', async event => {
-        event.preventDefault();
-        const upload = file.files[0];
-        if (!upload) return;
-        if (upload.size > 5 * 1024 * 1024) {
-            feedback.textContent = '5MB 이하의 파일을 선택해 주세요.';
-            return;
-        }
-        const button = event.currentTarget.querySelector('button');
-        const data = new FormData();
-        data.append('file', upload);
-        button.disabled = file.disabled = true;
-        feedback.textContent = '이력서를 분석하고 있어요…';
-        try {
-            feedback.textContent = (await ask('resume', { body: data })).message;
-        } catch (error) {
-            feedback.textContent = error.message;
-        } finally {
-            button.disabled = file.disabled = false;
-        }
-    });
-    file.addEventListener('change', () => { feedback.textContent = ''; });
 })();
