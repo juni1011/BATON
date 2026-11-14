@@ -11,16 +11,16 @@ import org.springframework.boot.test.context.SpringBootTest;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * 실제 Codex CLI로 가상 계약서 사진(samples/contract1.txt를 그린 이미지)을 분석한다.
- * 로그인된 codex가 필요하고 시간이 걸리므로 {@code RUN_CODEX_IT=1}일 때만 실행한다.
+ * 실제 Gemini API로 가상 계약서 사진(samples/contract1.txt를 그린 이미지)을 분석한다.
+ * GEMINI_API_KEY가 필요하고 시간이 걸리므로 {@code RUN_GEMINI_IT=1}일 때만 실행한다.
  */
 @SpringBootTest
-@EnabledIfEnvironmentVariable(named = "RUN_CODEX_IT", matches = ".+")
-class ContractImageCodexIT {
+@EnabledIfEnvironmentVariable(named = "RUN_GEMINI_IT", matches = ".+")
+class ContractImageGeminiIT {
     @Autowired ContractImageAnalyzer analyzer;
 
     @Test
-    void readsSampleContractPhotoWithRealCodex() throws Exception {
+    void readsSampleContractPhotoWithRealGemini() throws Exception {
         byte[] image = Files.readAllBytes(Path.of("src/test/resources/contract-sample.png"));
         var info = analyzer.analyze(image, ContractImageAnalyzer.imageExtension(image));
         assertEquals(15000, info.hourlyWage());
