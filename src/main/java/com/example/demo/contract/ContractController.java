@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-/** 담당 A: 계약서 텍스트(파일 또는 붙여넣기)는 규칙으로, 사진은 Codex로 추출한다. */
+/** 담당 A: 계약서 텍스트(파일 또는 붙여넣기)는 규칙으로, 사진은 Gemini로 추출한다. */
 @RestController
 @RequestMapping("/api/contracts")
 public class ContractController {
@@ -30,8 +30,8 @@ public class ContractController {
 
     /**
      * 파일이 있으면 파일을, 없으면 text를 읽는다. 둘 다 비어 있으면 400이다.
-     * PNG·JPEG·WEBP·GIF 사진은 Codex로 분석하며, 사진이 외부 AI로 전송되므로 {@code consent=true}가 없으면 400이다.
-     * 텍스트는 기본적으로 규칙으로 읽고, {@code consent=true}를 주면 Codex로 읽는다(문장형 계약서용).
+     * PNG·JPEG·WEBP·GIF 사진은 Gemini로 분석하며, 사진이 외부 AI로 전송되므로 {@code consent=true}가 없으면 400이다.
+     * 텍스트는 기본적으로 규칙으로 읽고, {@code consent=true}를 주면 Gemini로 읽는다(문장형 계약서용).
      * AI 분석이 실패하면 규칙 결과로 바꿔치지 않고 오류를 돌려준다. 그 밖의 텍스트가 아닌 파일(PDF 등)은 415를 돌려준다.
      */
     @PostMapping("/extract")
