@@ -1,0 +1,34 @@
+.runner-journey {
+    --rj-burgundy: #9b3f3f;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    overflow: hidden;
+    isolation: isolate;
+    border-radius: inherit;
+    background: radial-gradient(ellipse at 50% 66%, #f8efd9 0%, #fffcf4 60%);
+    color: #44352f;
+    font-family: inherit;
+}
+.rj-scene { display: block; position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden; }
+.rj-heading { position: absolute; z-index: 2; top: 58px; left: 12px; right: 12px; text-align: center; pointer-events: none; }
+.rj-heading h2 { display: inline-flex; align-items: baseline; margin: 0; color: var(--rj-burgundy); font-size: clamp(20px, 2.5vw, 29px); font-weight: 750; line-height: 1.5; letter-spacing: -.045em; white-space: nowrap; }
+.rj-loading-dots { display: inline-block; width: 1.05em; text-align: left; letter-spacing: .05em; }
+.rj-card-label { fill: #9a8473; font-size: 11px; font-weight: 600; font-family: inherit; letter-spacing: -.015em; }
+.rj-card-value { fill: #65443b; font-size: 14px; font-weight: 700; font-family: inherit; letter-spacing: -.03em; }
+.rj-skip { position: absolute; z-index: 3; right: 25px; bottom: 27px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: auto; min-height: 40px; margin: 0; border: 0; border-radius: 7px; padding: 7px 9px; background: transparent; color: #927b68; font: inherit; font-size: 11px; font-weight: 500; line-height: 1.4; cursor: pointer; }
+.rj-skip span { font-size: 14px; }
+.rj-skip:hover { background: #f2e9da; color: var(--rj-burgundy); }
+.rj-skip:focus-visible { outline: 2px solid var(--rj-burgundy); outline-offset: 3px; }
+.rj-sr-only { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+@media (max-width: 719px) {
+    .rj-heading { top: 45px; }
+    .rj-heading h2 { font-size: clamp(17px, 5vw, 23px); }
+    .rj-skip { right: 17px; bottom: 22px; }
+    .rj-card-value { font-size: 13px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .runner-journey *, .runner-journey *::before, .runner-journey *::after { animation: none !important; transition: none !important; }
+}
