@@ -119,7 +119,7 @@ public class SupportAiController {
                 log.warn("Gemini 요청 실패 status={} model={} message={}", reply.statusCode(), model,
                         reason.length() > 200 ? reason.substring(0, 200) : reason);
                 return switch (reply.statusCode()) {
-                    case 429 -> message(429, "AI 사용 한도에 도달했습니다. 잠시 후 다시 시도해 주세요.");
+                    case 429 -> message(429, "서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
                     case 400, 401, 403 -> message(502, "AI 서비스 인증에 실패했습니다. 서버의 AI 설정을 확인해 주세요.");
                     case 404 -> message(502, "AI 모델을 찾을 수 없습니다. 서버의 AI 설정을 확인해 주세요.");
                     case 500, 503 -> message(503, "AI가 일시적으로 혼잡합니다. 잠시 후 다시 시도해 주세요.");

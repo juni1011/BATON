@@ -126,7 +126,7 @@ public class ContractImageAnalyzer {
                     .POST(HttpRequest.BodyPublishers.ofString(json.writeValueAsString(payload))).build();
             var reply = CLIENT.send(call, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
             if (reply.statusCode() == 429) {
-                throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "AI 사용 한도에 도달했습니다.");
+                throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "서버 오류가 발생했습니다.");
             }
             if (reply.statusCode() != 200) {
                 log.warn("Gemini 분석이 실패했습니다. status={}", reply.statusCode());
