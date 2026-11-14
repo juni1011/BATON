@@ -28,6 +28,32 @@
 
 사진에서 읽은 값은 범위를 검사해 벗어나면 null로 둔다(시급 1~1,000,000, 지급일 1~31 등).
 
+### ContractInfo 필드
+
+원문에 없는 값은 `null`, 명시적으로 부정하면 `false`, 긍정하면 `true`이다. 추정하지 않는다.
+AI는 값만 추출하고 점검 판정은 서버의 규칙 코드(`ContractChecker`)가 한다.
+
+| 필드 | 타입 | 설명 |
+| --- | --- | --- |
+| `employerName`, `workplace`, `jobDescription` | string | 사용자(사업주), 근무 장소, 업무 내용 |
+| `hourlyWage`, `weeklyHours`, `breakMinutes`, `payDay` | number | 시급(원), 주 소정근로시간, 휴게(분), 매월 지급일(1~31) |
+| `workDays` | DayOfWeek[] | 근무 요일 |
+| `startTime`, `endTime` | `HH:mm` | 근무 시작·종료 시각 |
+| `workTimes` | object | 요일별 시간이 다를 때만 있는 요일별 `{startTime,endTime}` |
+| `contractStart`, `contractEnd` | `yyyy-MM-dd` | 계약 시작일·종료일 |
+| `weeklyHolidayPayIncluded` | boolean | 주휴수당이 시급에 포함되면 true, 별도 지급이면 false |
+| `probation`, `probationMonths`, `probationWageRate` | boolean, number, number | 수습 적용 여부, 기간(개월), 임금 비율(%) |
+| `socialInsuranceMentioned` | boolean | 사회보험 가입 언급 |
+| `clauses` | string[] | 근로조건 조항 원문 |
+| `weeklyHolidayDay` | DayOfWeek | 주휴일로 적힌 요일 하나(예: `SUNDAY`) |
+| `annualLeaveMentioned` | boolean | 연차유급휴가를 부여한다고 적혀 있으면 true |
+| `payMethod` | string | 임금 지급방법(예: `계좌이체`, `현금`), 최대 50자 |
+| `contractDelivered` | boolean | 계약서를 근로자에게 교부한다는 조항이 있으면 true |
+
+`POST /api/checks`는 새 항목으로 `weekly-holiday-day`(휴일), `annual-leave`(연차유급휴가), `pay-method`(임금 지급방법),
+`contract-period`(계약 종료일), `contract-delivery`(계약서 교부)를 점검한다. 값이 없으면 앞의 세 항목은 `MISSING`,
+뒤의 두 항목은 `WARNING`이며 값이 있으면 `OK`이다. 점검 결과는 정보 제공용이며 법률 자문이 아니다.
+
 ## POST /api/auth/signup
 
 요청 `application/json`:

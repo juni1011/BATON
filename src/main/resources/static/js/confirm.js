@@ -13,9 +13,9 @@ document.addEventListener("DOMContentLoaded", () => {
     };
     const field = id => times[id] || document.getElementById(id);
 
-    const TEXT = ["employerName", "workplace", "jobDescription", "startTime", "endTime", "contractStart", "contractEnd"];
+    const TEXT = ["employerName", "workplace", "jobDescription", "startTime", "endTime", "contractStart", "contractEnd", "payMethod", "weeklyHolidayDay"];
     const INTEGER = ["hourlyWage", "breakMinutes", "payDay", "probationMonths", "probationWageRate"];
-    const BOOLEAN = ["weeklyHolidayPayIncluded", "probation", "socialInsuranceMentioned"];
+    const BOOLEAN = ["weeklyHolidayPayIncluded", "probation", "socialInsuranceMentioned", "annualLeaveMentioned", "contractDelivered"];
 
     const dayBox = field("workDays");
     for (const day of DAYS) {
@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
         markEmpty();
     }
 
-    /** 폼에서 18개 키를 모두 가진 ContractInfo를 만든다. */
+    /** 폼에서 22개 키를 모두 가진 ContractInfo를 만든다. */
     function read() {
         const contract = {};
         for (const id of TEXT) contract[id] = field(id).value.trim() || null;
@@ -83,7 +83,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const found = Object.values(saved).filter(value => value !== null).length;
             notify(origin, found === 0
                 ? "계약서에서 읽어 낸 항목이 없습니다. 아래에 직접 입력해 주세요."
-                : `18개 항목 중 ${found}개를 읽었습니다. 점선으로 표시된 칸은 계약서에서 찾지 못한 항목입니다.`,
+                : `22개 항목 중 ${found}개를 읽었습니다. 점선으로 표시된 칸은 계약서에서 찾지 못한 항목입니다.`,
                 found === 0 ? "warn" : "");
         }
     } else {

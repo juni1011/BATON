@@ -37,7 +37,12 @@ public class ContractTextParser {
     private static final Pattern INSURANCE =
             Pattern.compile("사회\\s*보험|4대\\s*보험|고용\\s*보험|산재\\s*보험|국민\\s*연금|건강\\s*보험");
 
-    /** 텍스트 전체를 읽어 18개 필드를 채운다. */
+    private static final Pattern DAY_NAME = Pattern.compile("([" + DAYS + "])요일");
+    private static final Pattern PAY_METHOD = Pattern.compile("계좌\\s*이체|계좌\\s*입금|통장\\s*입금|현금");
+    private static final Pattern NEGATED = Pattern.compile(
+            "(않|아니|없|제외|미부여|미교부|못)");
+
+    /** 텍스트 전체를 읽어 22개 필드를 채운다. */
     public ContractInfo parse(String text) {
         List<String> lines = text.lines().map(String::strip).filter(line -> !line.isEmpty()).toList();
         Map<String, String> labels = new LinkedHashMap<>();
@@ -65,7 +70,9 @@ public class ContractTextParser {
         if (times == null) times = times(text);
         List<LocalDate> period = dates(label(labels, "계약기간", "근로계약기간", "근로기간", "근무기간"));
 
-        String holidayLine = lineContaining(lines, "주휴");
+        // "주휴일" 줄은 주휴수당 내용이 아니므로 제외하고 찾는다.
+        String holidayLine = lines.stream().filter(line -> line.replace("주휴일", "").contains("주휴"))
+                .findFirst().orElse(null);
         Boolean holidayIncluded = null;
         if (holidayLine != null) {
             if (holidayLine.matches(".*(포함하지\\s*않|포함하지\\s*아니|미포함|별도).*")) holidayIncluded = false;
@@ -121,7 +128,50 @@ public class ContractTextParser {
                 probationMonths,
                 probationRate,
                 insurance,
-                clauses.isEmpty() ? null : List.copyOf(clauses));
+                clauses.isEmpty() ? null : List.copyOf(clauses),
+                weeklyHolidayDay(lines),
+                annualLeave(lines),
+                payMethod(lines),
+                contractDelivered(lines),
+                null);
+    }
+
+    /** "주휴일" 줄에 요일이 정확히 하나만 적혀 있을 때만 그 요일을 읽는다. */
+    private static DayOfWeek weeklyHolidayDay(List<String> lines) {
+        for (String line : lines) {
+            if (!line.contains("주휴일")) continue;
+            TreeSet<DayOfWeek> days = new TreeSet<>();
+            Matcher matcher = DAY_NAME.matcher(line);
+            while (matcher.find()) days.add(DayOfWeek.of(DAYS.indexOf(matcher.group(1)) + 1));
+            if (days.size() == 1) return days.first();
+        }
+        return null;
+    }
+
+    /** "연차" 줄이 있으면 부여한다고 적힌 것은 true, 부여하지 않는다는 표현이 있으면 false. */
+    private static Boolean annualLeave(List<String> lines) {
+        String line = lineContaining(lines, "연차");
+        return line == null ? null : !NEGATED.matcher(line).find();
+    }
+
+    /** 임금·급여 줄에 계좌이체·현금 같은 지급방법 표현이 있으면 그 표현을 그대로 읽는다. */
+    private static String payMethod(List<String> lines) {
+        for (String line : lines) {
+            if (!line.matches(".*(임금|급여|월급|보수).*")) continue;
+            Matcher matcher = PAY_METHOD.matcher(line);
+            if (matcher.find()) return matcher.group().replaceAll("\\s+", "");
+        }
+        return null;
+    }
+
+    /** 계약서를 교부한다는 줄이 있으면 true, 교부하지 않는다는 표현이 있으면 false. */
+    private static Boolean contractDelivered(List<String> lines) {
+        for (String line : lines) {
+            if (line.contains("교부") && line.matches(".*(근로\\s*계약|계약서).*")) {
+                return !NEGATED.matcher(line).find();
+            }
+        }
+        return null;
     }
 
     private static String firstNonNull(String first, String second) {

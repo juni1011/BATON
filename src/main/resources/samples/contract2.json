@@ -24,8 +24,14 @@
   "socialInsuranceMentioned": true,
   "clauses": [
     "시급은 3,000원이다.",
-    "임금은 매월 10일에 전월분을 지급한다.",
+    "임금은 매월 10일에 전월분을 계좌이체로 지급한다.",
     "근무 중 30분의 휴게시간을 자유롭게 이용한다.",
-    "사회보험은 관계 법령에 따라 가입한다."
-  ]
+    "사회보험은 관계 법령에 따라 가입한다.",
+    "연차유급휴가는 근로기준법에 따라 부여한다.",
+    "사용자는 이 계약서를 작성하여 근로자에게 교부한다."
+  ],
+  "weeklyHolidayDay": "SUNDAY",
+  "annualLeaveMentioned": true,
+  "payMethod": "계좌이체",
+  "contractDelivered": true
 }

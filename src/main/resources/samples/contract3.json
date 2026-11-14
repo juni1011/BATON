@@ -24,8 +24,13 @@
   "socialInsuranceMentioned": true,
   "clauses": [
     "시급은 15,000원이며 주휴수당은 시급에 포함하지 않고 별도로 지급한다.",
+    "임금은 현금으로 지급한다.",
     "무단 퇴사 시 급여 미지급으로 처리한다.",
     "계약 기간 중 퇴사할 경우 근로자는 위약금으로 500,000원(가상 금액)을 사용자에게 지급한다.",
     "사회보험은 관계 법령에 따라 가입한다."
-  ]
+  ],
+  "weeklyHolidayDay": "SUNDAY",
+  "annualLeaveMentioned": null,
+  "payMethod": "현금",
+  "contractDelivered": null
 }

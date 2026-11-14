@@ -60,7 +60,10 @@ class CheckControllerTests {
     @Test
     void sampleThreeFlagsClausesAndMissingTerms() throws Exception {
         check(3).andExpect(jsonPath("$.dangerCount").value(2))
-                .andExpect(jsonPath("$.missingCount").value(2))
+                .andExpect(jsonPath("$.warningCount").value(1))
+                .andExpect(jsonPath("$.missingCount").value(3))
+                .andExpect(jsonPath("$.items[?(@.id == 'annual-leave')].level").value("MISSING"))
+                .andExpect(jsonPath("$.items[?(@.id == 'contract-delivery')].level").value("WARNING"))
                 .andExpect(jsonPath("$.items[?(@.id == 'penalty-clause-1')].originalText")
                         .value("계약 기간 중 퇴사할 경우 근로자는 위약금으로 500,000원(가상 금액)을 사용자에게 지급한다."))
                 .andExpect(jsonPath("$.items[?(@.id == 'unpaid-clause-1')].level").value("DANGER"))
@@ -74,6 +77,72 @@ class CheckControllerTests {
         mvc.perform(post("/api/checks").contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estimatedMonthlyPay").value(nullValue()))
-                .andExpect(jsonPath("$.missingCount").value(8));
+                .andExpect(jsonPath("$.missingCount").value(11))
+                .andExpect(jsonPath("$.items[?(@.id == 'contract-period')].level").value("WARNING"))
+                .andExpect(jsonPath("$.items[?(@.id == 'contract-delivery')].level").value("WARNING"));
+    }
+
+    private ResultActions checkJson(String json) throws Exception {
+        return mvc.perform(post("/api/checks").contentType(MediaType.APPLICATION_JSON).content(json))
+                .andExpect(status().isOk());
+    }
+
+    /** 주휴일 요일이 적혀 있으면 OK, 없으면 "휴일 미기재" MISSING이다. */
+    @Test
+    void weeklyHolidayDayItem() throws Exception {
+        checkJson("{\"weeklyHolidayDay\":\"SUNDAY\"}")
+                .andExpect(jsonPath("$.items[?(@.id == 'weekly-holiday-day')].level").value("OK"))
+                .andExpect(jsonPath("$.items[?(@.id == 'weekly-holiday-day')].reason")
+                        .value("매주 일요일이 주휴일로 적혀 있습니다."));
+        checkJson("{}")
+                .andExpect(jsonPath("$.items[?(@.id == 'weekly-holiday-day')].level").value("MISSING"))
+                .andExpect(jsonPath("$.items[?(@.id == 'weekly-holiday-day')].title").value("휴일 미기재"))
+                .andExpect(jsonPath("$.items[?(@.id == 'weekly-holiday-day')].questionForEmployer").isNotEmpty());
+    }
+
+    /** 연차유급휴가는 true면 OK, null이면 MISSING, 없다고 적혀 있으면 WARNING이다. */
+    @Test
+    void annualLeaveItem() throws Exception {
+        checkJson("{\"annualLeaveMentioned\":true}")
+                .andExpect(jsonPath("$.items[?(@.id == 'annual-leave')].level").value("OK"));
+        checkJson("{}")
+                .andExpect(jsonPath("$.items[?(@.id == 'annual-leave')].level").value("MISSING"))
+                .andExpect(jsonPath("$.items[?(@.id == 'annual-leave')].title").value("연차유급휴가 미기재"));
+        checkJson("{\"annualLeaveMentioned\":false}")
+                .andExpect(jsonPath("$.items[?(@.id == 'annual-leave')].level").value("WARNING"));
+    }
+
+    /** 임금 지급방법이 있으면 OK, 없거나 공백이면 MISSING이다. */
+    @Test
+    void payMethodItem() throws Exception {
+        checkJson("{\"payMethod\":\"계좌이체\"}")
+                .andExpect(jsonPath("$.items[?(@.id == 'pay-method')].level").value("OK"));
+        checkJson("{}")
+                .andExpect(jsonPath("$.items[?(@.id == 'pay-method')].level").value("MISSING"))
+                .andExpect(jsonPath("$.items[?(@.id == 'pay-method')].title").value("임금 지급방법 미기재"));
+        checkJson("{\"payMethod\":\"  \"}")
+                .andExpect(jsonPath("$.items[?(@.id == 'pay-method')].level").value("MISSING"));
+    }
+
+    /** 계약 종료일이 있으면 OK, 없으면 기간 확인 WARNING이다. */
+    @Test
+    void contractPeriodItem() throws Exception {
+        checkJson("{\"contractEnd\":\"2027-02-28\"}")
+                .andExpect(jsonPath("$.items[?(@.id == 'contract-period')].level").value("OK"));
+        checkJson("{}")
+                .andExpect(jsonPath("$.items[?(@.id == 'contract-period')].level").value("WARNING"))
+                .andExpect(jsonPath("$.items[?(@.id == 'contract-period')].title").value("계약 기간 확인 필요"));
+    }
+
+    /** 교부 조항이 있으면 OK, 없거나 교부하지 않는다고 적혀 있으면 WARNING이다. */
+    @Test
+    void contractDeliveryItem() throws Exception {
+        checkJson("{\"contractDelivered\":true}")
+                .andExpect(jsonPath("$.items[?(@.id == 'contract-delivery')].level").value("OK"));
+        checkJson("{}")
+                .andExpect(jsonPath("$.items[?(@.id == 'contract-delivery')].level").value("WARNING"))
+                .andExpect(jsonPath("$.items[?(@.id == 'contract-delivery')].title").value("계약서 교부 확인"));
+        checkJson("{\"contractDelivered\":false}")
+                .andExpect(jsonPath("$.items[?(@.id == 'contract-delivery')].level").value("WARNING"));
     }
 }

@@ -1,6 +1,7 @@
 package com.example.demo.check;
 
 import com.example.demo.common.ContractInfo;
+import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -25,6 +26,12 @@ public class ContractChecker {
             "(급여|임금|월급|시급|수당).{0,15}(미지급|지급하지\\s*(않|아니))|(급여|임금|월급).{0,10}(공제|차감|삭감)");
 
     private static final String LAW_17 = "근로기준법 제17조(근로조건의 명시)";
+    private static final String LAW_17_2 = "근로기준법 제17조(근로조건의 명시) 제2항";
+    private static final String LAW_TERM_17 = "기간제 및 단시간근로자 보호 등에 관한 법률 제17조(근로조건의 서면 명시)";
+    private static final Map<DayOfWeek, String> DAY_NAMES = Map.of(
+            DayOfWeek.MONDAY, "월요일", DayOfWeek.TUESDAY, "화요일", DayOfWeek.WEDNESDAY, "수요일",
+            DayOfWeek.THURSDAY, "목요일", DayOfWeek.FRIDAY, "금요일", DayOfWeek.SATURDAY, "토요일",
+            DayOfWeek.SUNDAY, "일요일");
 
     public CheckReport check(ContractInfo c) {
         List<CheckItem> items = new ArrayList<>();
@@ -43,6 +50,11 @@ public class ContractChecker {
         checkClauses(c, items);
         checkProbation(c, items, minimum, minimumLabel);
         checkInsurance(c, items);
+        checkWeeklyHolidayDay(c, items);
+        checkAnnualLeave(c, items);
+        checkPayMethod(c, items);
+        checkContractPeriod(c, items);
+        checkContractDelivery(c, items);
 
         items.sort(Comparator.comparing(CheckItem::level));
         return new CheckReport(count(items, CheckLevel.DANGER), count(items, CheckLevel.WARNING),
@@ -266,6 +278,76 @@ public class ContractChecker {
                     "사회보험에 가입하지 않는다고 적혀 있습니다. 가입 요건에 해당하면 당사자 합의로 "
                             + "가입을 제외할 수 없으므로 본인이 가입 대상인지 확인하세요.", law,
                     "제 근무시간이면 4대 보험 가입 대상이 아닌지 확인해 주실 수 있나요?"));
+        }
+    }
+
+    private void checkWeeklyHolidayDay(ContractInfo c, List<CheckItem> items) {
+        String law = LAW_17_2 + ", " + LAW_TERM_17;
+        if (c.weeklyHolidayDay() == null) {
+            items.add(new CheckItem("weekly-holiday-day", "휴일 미기재", CheckLevel.MISSING, clause(c, "주휴일"),
+                    "휴일은 서면으로 명시해야 하는데 주휴일이 무슨 요일인지 찾지 못했습니다.", law,
+                    "주휴일은 무슨 요일인가요? 계약서에 적어 주실 수 있나요?"));
+        } else {
+            items.add(new CheckItem("weekly-holiday-day", "휴일 기재", CheckLevel.OK, clause(c, "주휴일"),
+                    "매주 " + DAY_NAMES.get(c.weeklyHolidayDay()) + "이 주휴일로 적혀 있습니다.", law, null));
+        }
+    }
+
+    private void checkAnnualLeave(ContractInfo c, List<CheckItem> items) {
+        String clause = clause(c, "연차");
+        if (c.annualLeaveMentioned() == null) {
+            items.add(new CheckItem("annual-leave", "연차유급휴가 미기재", CheckLevel.MISSING, clause,
+                    "연차유급휴가는 서면으로 명시해야 하는 근로조건인데 계약서에서 찾지 못했습니다.", LAW_17_2,
+                    "연차유급휴가는 어떻게 부여되나요? 계약서에 적어 주실 수 있나요?"));
+        } else if (c.annualLeaveMentioned()) {
+            items.add(new CheckItem("annual-leave", "연차유급휴가 기재", CheckLevel.OK, clause,
+                    "연차유급휴가를 부여한다고 적혀 있습니다.", LAW_17_2, null));
+        } else {
+            items.add(new CheckItem("annual-leave", "연차유급휴가 부여하지 않는다고 기재", CheckLevel.WARNING, clause,
+                    "연차유급휴가를 부여하지 않는다고 적혀 있습니다. 적용 대상이면 당사자 합의로 "
+                            + "배제할 수 없으므로 본인이 대상인지 확인하세요.", LAW_17_2,
+                    "제 근무 조건이면 연차유급휴가가 발생하는지 확인해 주실 수 있나요?"));
+        }
+    }
+
+    private void checkPayMethod(ContractInfo c, List<CheckItem> items) {
+        String law = LAW_17_2 + ", 제43조(임금 지급)";
+        if (c.payMethod() == null || c.payMethod().isBlank()) {
+            items.add(new CheckItem("pay-method", "임금 지급방법 미기재", CheckLevel.MISSING, null,
+                    "임금의 지급방법은 서면으로 명시해야 하는데 계약서에서 찾지 못했습니다.", law,
+                    "급여는 어떤 방법(계좌이체 등)으로 지급되나요? 계약서에 적어 주실 수 있나요?"));
+        } else {
+            items.add(new CheckItem("pay-method", "임금 지급방법 기재", CheckLevel.OK, clause(c, c.payMethod()),
+                    "계약서에 임금 지급방법이 '" + c.payMethod() + "'라고 적혀 있습니다.", law, null));
+        }
+    }
+
+    private void checkContractPeriod(ContractInfo c, List<CheckItem> items) {
+        if (c.contractEnd() == null) {
+            items.add(new CheckItem("contract-period", "계약 기간 확인 필요", CheckLevel.WARNING, null,
+                    "계약 종료일이 없습니다. 기간을 정하지 않은 계약인지, 종료일이 빠진 것인지 확인하세요.",
+                    LAW_TERM_17, "계약 종료일이 언제인가요? 기간을 정하지 않은 계약이라면 그렇게 적어 주실 수 있나요?"));
+        } else {
+            items.add(new CheckItem("contract-period", "계약 종료일 기재", CheckLevel.OK, null,
+                    "계약 종료일이 " + c.contractEnd() + "로 적혀 있습니다.", LAW_TERM_17, null));
+        }
+    }
+
+    private void checkContractDelivery(ContractInfo c, List<CheckItem> items) {
+        String clause = clause(c, "교부");
+        if (c.contractDelivered() == null) {
+            items.add(new CheckItem("contract-delivery", "계약서 교부 확인", CheckLevel.WARNING, clause,
+                    "계약서를 근로자에게 교부한다는 내용을 찾지 못했습니다. 근로계약을 맺으면 "
+                            + "계약서를 근로자에게 내주어야 합니다.", LAW_17,
+                    "계약서 사본을 저에게도 주실 수 있나요?"));
+        } else if (c.contractDelivered()) {
+            items.add(new CheckItem("contract-delivery", "계약서 교부 조항 기재", CheckLevel.OK, clause,
+                    "계약서를 근로자에게 교부한다는 조항이 적혀 있습니다.", LAW_17, null));
+        } else {
+            items.add(new CheckItem("contract-delivery", "계약서 교부 확인", CheckLevel.WARNING, clause,
+                    "계약서를 교부하지 않는다고 적혀 있습니다. 근로계약을 맺으면 "
+                            + "계약서를 근로자에게 내주어야 합니다.", LAW_17,
+                    "계약서 사본을 저에게도 주실 수 있나요?"));
         }
     }
 

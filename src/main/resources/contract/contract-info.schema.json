@@ -124,6 +124,40 @@
     "type": "string"
    }
   },
+  "weeklyHolidayDay": {
+   "type": [
+    "string",
+    "null"
+   ],
+   "enum": [
+    "MONDAY",
+    "TUESDAY",
+    "WEDNESDAY",
+    "THURSDAY",
+    "FRIDAY",
+    "SATURDAY",
+    "SUNDAY",
+    null
+   ]
+  },
+  "annualLeaveMentioned": {
+   "type": [
+    "boolean",
+    "null"
+   ]
+  },
+  "payMethod": {
+   "type": [
+    "string",
+    "null"
+   ]
+  },
+  "contractDelivered": {
+   "type": [
+    "boolean",
+    "null"
+   ]
+  },
   "workTimes": {
    "type": [
     "object",
@@ -337,6 +371,10 @@
   "probationWageRate",
   "socialInsuranceMentioned",
   "clauses",
+  "weeklyHolidayDay",
+  "annualLeaveMentioned",
+  "payMethod",
+  "contractDelivered",
   "workTimes"
  ],
  "additionalProperties": false

@@ -31,6 +31,10 @@ public record ContractInfo(
         Integer probationWageRate,
         Boolean socialInsuranceMentioned,
         List<String> clauses,
+        DayOfWeek weeklyHolidayDay,
+        Boolean annualLeaveMentioned,
+        String payMethod,
+        Boolean contractDelivered,
         @JsonInclude(JsonInclude.Include.NON_NULL) Map<DayOfWeek, WorkTime> workTimes
 ) {
     public record WorkTime(
@@ -45,7 +49,8 @@ public record ContractInfo(
                         Integer probationWageRate, Boolean socialInsuranceMentioned, List<String> clauses) {
         this(employerName, workplace, jobDescription, hourlyWage, weeklyHours, workDays, startTime, endTime,
                 breakMinutes, contractStart, contractEnd, payDay, weeklyHolidayPayIncluded, probation,
-                probationMonths, probationWageRate, socialInsuranceMentioned, clauses, null);
+                probationMonths, probationWageRate, socialInsuranceMentioned, clauses,
+                null, null, null, null, null);
     }
 
     public WorkTime timeOn(DayOfWeek day) {

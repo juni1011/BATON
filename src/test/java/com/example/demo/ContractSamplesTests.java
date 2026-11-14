@@ -33,7 +33,7 @@ class ContractSamplesTests {
         assertFalse(contract.clauses().isEmpty());
         try (var stream = new ClassPathResource("samples/contract" + number + ".json").getInputStream()) {
             var original = mapper.readTree(stream);
-            assertEquals(18, original.size());
+            assertEquals(22, original.size());
             assertEquals(original, mapper.readTree(mapper.writeValueAsString(contract)));
         }
     }

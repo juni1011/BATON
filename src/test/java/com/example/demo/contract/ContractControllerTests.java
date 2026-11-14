@@ -56,7 +56,11 @@ class ContractControllerTests {
                 .andExpect(jsonPath("$.employerName").value("가상별빛상점"))
                 .andExpect(jsonPath("$.hourlyWage").value(15000))
                 .andExpect(jsonPath("$.startTime").value("14:00"))
-                .andExpect(jsonPath("$.clauses.length()").value(4));
+                .andExpect(jsonPath("$.clauses.length()").value(6))
+                .andExpect(jsonPath("$.weeklyHolidayDay").value("SUNDAY"))
+                .andExpect(jsonPath("$.annualLeaveMentioned").value(true))
+                .andExpect(jsonPath("$.payMethod").value("계좌이체"))
+                .andExpect(jsonPath("$.contractDelivered").value(true));
     }
 
     /** 읽을 수 있는 항목이 없는 텍스트는 추정 없이 모든 값을 null로 돌려주는지 확인한다. */
@@ -78,5 +82,27 @@ class ContractControllerTests {
         var pdf = new MockMultipartFile("file", "contract.pdf", "application/pdf", new byte[] {1, 2, 3});
         mvc.perform(multipart("/api/contracts/extract").file(pdf))
                 .andExpect(status().isUnsupportedMediaType());
+    }
+
+    /** 새 항목은 문구가 분명할 때만 읽고, 부정 표현은 false, 언급이 없으면 null로 두는지 확인한다. */
+    @Test
+    void extractNewTermsFromKeywords() throws Exception {
+        var text = "근무 장소: 가상시 상상구\n주휴일: 매주 토요일\n임금은 현금 지급한다.\n"
+                + "연차유급휴가는 부여하지 않는다.\n계약서는 근로자에게 교부하지 않는다.";
+        mvc.perform(post("/api/contracts/extract")
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED).param("text", text))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.weeklyHolidayDay").value("SATURDAY"))
+                .andExpect(jsonPath("$.payMethod").value("현금"))
+                .andExpect(jsonPath("$.annualLeaveMentioned").value(false))
+                .andExpect(jsonPath("$.contractDelivered").value(false));
+        mvc.perform(post("/api/contracts/extract")
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .param("text", "근무 장소: 가상시\n주휴일: 월요일 또는 화요일\n임금은 매월 10일에 지급한다."))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.weeklyHolidayDay").value(nullValue()))
+                .andExpect(jsonPath("$.annualLeaveMentioned").value(nullValue()))
+                .andExpect(jsonPath("$.payMethod").value(nullValue()))
+                .andExpect(jsonPath("$.contractDelivered").value(nullValue()));
     }
 }

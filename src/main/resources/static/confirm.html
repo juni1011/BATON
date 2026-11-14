@@ -248,6 +248,41 @@
                             <option value="true">시급에 포함</option>
                         </select>
                     </div>
+                    <div><label for="payMethod">임금 지급방법</label><input id="payMethod" type="text" maxlength="50" placeholder="예: 계좌이체"></div>
+                </div>
+            </section>
+            <section class="card">
+                <h2>휴일·연차와 계약서 교부</h2>
+                <div class="form-grid">
+                    <div>
+                        <label for="weeklyHolidayDay">주휴일 요일</label>
+                        <select id="weeklyHolidayDay">
+                            <option value="">계약서에 언급 없음</option>
+                            <option value="MONDAY">월요일</option>
+                            <option value="TUESDAY">화요일</option>
+                            <option value="WEDNESDAY">수요일</option>
+                            <option value="THURSDAY">목요일</option>
+                            <option value="FRIDAY">금요일</option>
+                            <option value="SATURDAY">토요일</option>
+                            <option value="SUNDAY">일요일</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="annualLeaveMentioned">연차유급휴가</label>
+                        <select id="annualLeaveMentioned">
+                            <option value="">확인 안 됨</option>
+                            <option value="true">적혀 있음</option>
+                            <option value="false">없다고 적힘</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="contractDelivered">계약서 교부 조항</label>
+                        <select id="contractDelivered">
+                            <option value="">확인 안 됨</option>
+                            <option value="true">적혀 있음</option>
+                            <option value="false">없다고 적힘</option>
+                        </select>
+                    </div>
                 </div>
             </section>
             <section class="card">

@@ -200,4 +200,16 @@ class ContractImageTests {
         org.junit.jupiter.api.Assertions.assertNull(clean.probationWageRate());
         org.junit.jupiter.api.Assertions.assertEquals(java.util.List.of("a", "b"), clean.clauses());
     }
+
+    @Test
+    void sanitizeKeepsNewTermsAndLimitsPayMethod() {
+        var info = new com.example.demo.common.ContractInfo(null, null, null, null, null, null, null, null, null,
+                null, null, null, null, null, null, null, null, null, java.time.DayOfWeek.SUNDAY, true,
+                "가".repeat(80), false, null);
+        var clean = ContractImageAnalyzer.sanitize(info);
+        org.junit.jupiter.api.Assertions.assertEquals(java.time.DayOfWeek.SUNDAY, clean.weeklyHolidayDay());
+        org.junit.jupiter.api.Assertions.assertEquals(Boolean.TRUE, clean.annualLeaveMentioned());
+        org.junit.jupiter.api.Assertions.assertEquals(50, clean.payMethod().length());
+        org.junit.jupiter.api.Assertions.assertEquals(Boolean.FALSE, clean.contractDelivered());
+    }
 }
