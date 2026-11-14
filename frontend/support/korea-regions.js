@@ -75,3 +75,13 @@ export function getDistricts(sido) {
   const region = REGIONS.find(item => item.code === sido || item.name === sido || item.aliases.includes(sido));
   return region ? DISTRICTS.filter(item => item.sidoCode === region.code) : [];
 }
+
+export function districtAtLocation(longitude, latitude) {
+  const [x, y] = project([longitude, latitude]);
+  const context = document.createElement('canvas').getContext('2d');
+  if (!context) return null;
+  return DISTRICTS.find(({ bounds, path }) =>
+    x >= bounds[0] && y >= bounds[1] && x <= bounds[2] && y <= bounds[3]
+    && context.isPointInPath(new Path2D(path), x, y, 'evenodd')
+  ) ?? null;
+}
