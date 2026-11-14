@@ -407,6 +407,7 @@ function SupportApp() {
                 startTime: null, endTime: null, description: match.organization, sourceLink: '/support.html' });
             window.Easyton.saveCalendarEvents(events);
             setAdded(current => new Set([...current, id]));
+            window.location.href = '/calendar.html';
         } catch { setMessage('일정을 저장하지 못했어요. 브라우저 저장 공간을 확인해 주세요.'); }
     }
 

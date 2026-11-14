@@ -13,7 +13,8 @@
     <meta name="theme-color" content="#9B3F3F">
     <script src="/js/common.js" defer></script>
     <script src="/js/ui.js?v=first-step-nav" defer></script>
-    <script src="/js/support.js?v=center-run-v2" defer></script>
+    <script src="/js/support-ai.js?v=ai-panel" defer></script>
+    <script src="/js/support.js?v=center-run-v3" defer></script>
 </head>
 <body class="support-page">
     <header class="site-header">
@@ -34,6 +35,12 @@
         <p role="status">추천 화면을 준비하고 있어요…</p>
         <noscript><p class="notice warn">지원사업 추천을 이용하려면 자바스크립트를 켜 주세요.</p></noscript>
     </main>
+    <section id="support-ai-panel" class="card stack" style="max-width: 960px; margin: 1rem auto; padding: 1.5rem" aria-labelledby="ai-title">
+        <h2 id="ai-title">AI 추천 지원사업</h2>
+        <p id="ai-recommendation" role="status" style="white-space: pre-line">카테고리나 지역을 선택하면 추천을 확인할 수 있어요.</p>
+        <div id="ai-links" class="row" style="gap: .5rem; flex-wrap: wrap" hidden></div>
+        <button id="ai-retry" type="button" class="btn small" hidden>추천 다시 받기</button>
+    </section>
     <footer>
         <p class="support-map-credit">지도 데이터: <a href="https://sgis.kostat.go.kr" target="_blank" rel="noopener noreferrer">SGIS</a> ·
             <a href="https://github.com/vuski/admdongkor" target="_blank" rel="noopener noreferrer">admdongkor</a> · 2026.04 ·
