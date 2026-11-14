@@ -38,6 +38,15 @@ window.Easyton = (() => {
         localStorage.removeItem(OWNER_KEY);
     }
 
+    /** 로그인해야 쓸 수 있는 화면이다. 홈(index)과 로그인·회원가입 화면은 열어 둔다. */
+    const PROTECTED_PAGES = ["/upload.html", "/confirm.html", "/report.html", "/calendar.html", "/support.html"];
+
+    /** 로그인하지 않았으면 로그인 화면으로 보내고, 로그인 뒤 원래 화면으로 돌아오게 한다. */
+    function requireLogin() {
+        if (!PROTECTED_PAGES.includes(location.pathname)) return;
+        location.replace("/signin.html?next=" + encodeURIComponent(location.pathname));
+    }
+
     /**
      * 페이지 스크립트가 localStorage를 읽기 전에 계정 데이터를 맞춘다. 동기 요청이라 로컬 서버의 작은 응답만 기다린다.
      * - 로그인 중: 서버 데이터로 덮어쓴다. 서버가 비어 있으면 로그인 전에 쓰던 이 브라우저 데이터를 계정으로 옮긴다.
@@ -51,6 +60,7 @@ window.Easyton = (() => {
             me.send();
             if (me.status === 401) {
                 if (owner() !== null) clearLocal();
+                requireLogin();
                 return;
             }
             if (me.status !== 200) return;
