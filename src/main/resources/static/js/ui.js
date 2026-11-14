@@ -92,11 +92,23 @@ window.EasytonUI = (() => {
     document.addEventListener("DOMContentLoaded", () => {
         const path = location.pathname === "/" ? "/index.html" : location.pathname;
         for (const link of document.querySelectorAll("nav a")) {
-            if (link.getAttribute("href") === path) link.setAttribute("aria-current", "page");
+            if (link.pathname === path && link.origin === location.origin) link.setAttribute("aria-current", "page");
         }
     });
 
-    return Object.freeze({ DAYS, DAY_LABELS, LEVEL_LABELS, VERDICT_LABELS, EVENT_LABELS, USER_EVENT_TYPES,
+    function contractTime(id) {
+        const [hour, minute] = document.getElementById(id).querySelectorAll("select");
+        return {
+            get value() { return hour.value ? hour.value + ":" + minute.value : ""; },
+            set value(time) {
+                const [hours, minutes] = (time || "").split(":");
+                hour.value = hours?.padStart(2, "0") || "";
+                minute.value = minutes || "00";
+            }
+        };
+    }
+
+    return Object.freeze({ contractTime, DAYS, DAY_LABELS, LEVEL_LABELS, VERDICT_LABELS, EVENT_LABELS, USER_EVENT_TYPES,
         h, won, dateLabel, todayIso, errorText, notify, saveGeneratedEvents, analyze });
 })();
 

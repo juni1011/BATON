@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>계약서 업로드 | 알바 첫걸음</title>
-    <link rel="stylesheet" href="/css/common.css">
-    <link rel="stylesheet" href="/css/upload.css">
+    <link rel="stylesheet" href="/css/common.css?v=first-step-wordmark">
+    <link rel="stylesheet" href="/css/upload.css?v=upload-centered">
     <link rel="icon" href="/images/logo-b2-mark.svg" type="image/svg+xml">
     <meta name="theme-color" content="#9B3F3F">
     <script src="/js/common.js" defer></script>
-    <script src="/js/ui.js" defer></script>
-    <script src="/js/upload.js" defer></script>
+    <script src="/js/ui.js?v=first-step-nav" defer></script>
+    <script src="/js/upload.js?v=consent-dropzone-merge" defer></script>
 </head>
 <body>
     <header class="site-header">
@@ -21,39 +21,38 @@
             </nav>
         </div>
         <nav class="primary-nav" aria-label="공통 메뉴">
-            <a class="site-name" href="/index.html" aria-label="알바 첫걸음 홈"><img class="site-logo" src="/images/logo-b2.svg" alt="알바 첫걸음" width="220" height="48"></a>
-            <a href="/upload.html">계약서 점검</a>
-            <a href="/support.html">지원사업 추천</a>
-            <a href="/calendar.html">캘린더</a>
+            <a class="site-name" href="/index.html" aria-label="첫걸음 홈"><img class="site-mark" src="/images/logo-b2-mark.svg" alt="" width="56" height="56"><span class="site-wordmark">첫걸음</span></a>
+            <a href="/upload.html?v=first-step-nav">계약서 점검</a>
+            <a href="/support.html?v=first-step-nav">지원사업 추천</a>
+            <a href="/calendar.html?v=first-step-nav">캘린더</a>
         </nav>
     </header>
     <main>
+        <ol class="review-steps" aria-label="계약서 점검 단계"><li aria-current="step">계약서 입력</li><li>항목 확인</li><li>점검 결과</li></ol>
         <h1>계약서 업로드</h1>
-        <p class="lead">계약서 텍스트 파일을 올리거나 내용을 붙여넣으면 주요 항목을 자동으로 찾아 드립니다.</p>
+        <p class="lead">계약서 파일을 올리거나 내용을 붙여넣으면 항목을 찾아 드려요. 항목을 직접 입력할 수도 있어요.</p>
         <div class="row card sample-card">
             <div class="sample-picker" id="sample-picker">
                 <span class="label" id="sample-label">가상 계약서 샘플</span>
-                <input type="hidden" id="sample" value="1">
-                <button type="button" class="sample-trigger" id="sample-toggle" aria-haspopup="listbox"
-                    aria-expanded="false" aria-controls="sample-options" aria-labelledby="sample-label sample-current">
-                    <span id="sample-current">정상 계약서</span><span aria-hidden="true">⌄</span>
+                <button type="button" class="sample-trigger" id="sample-toggle"
+                    aria-expanded="false" aria-controls="sample-popover" aria-labelledby="sample-label sample-prompt">
+                    <span id="sample-prompt">샘플 미리보기</span><span aria-hidden="true">⌄</span>
                 </button>
                 <div id="sample-popover" class="sample-popover" hidden>
-                    <div id="sample-options" class="sample-options" role="listbox" aria-labelledby="sample-label">
-                        <button type="button" class="sample-option" role="option" data-sample="1" aria-selected="true" tabindex="0">
-                            <span class="sample-check" aria-hidden="true">✓</span><span class="sample-option-label">정상 계약서</span>
+                    <div id="sample-options" class="sample-options" role="group" aria-labelledby="sample-label">
+                        <button type="button" class="sample-option" data-sample="1" aria-controls="sample-preview">
+                            <span class="sample-option-label">정상 계약서</span>
                         </button>
-                        <button type="button" class="sample-option" role="option" data-sample="2" aria-selected="false" tabindex="-1">
-                            <span class="sample-check" aria-hidden="true">✓</span><span class="sample-option-label">낮은 시급·주휴수당 미기재</span>
+                        <button type="button" class="sample-option" data-sample="2" aria-controls="sample-preview">
+                            <span class="sample-option-label">낮은 시급·주휴수당 미기재</span>
                         </button>
-                        <button type="button" class="sample-option" role="option" data-sample="3" aria-selected="false" tabindex="-1">
-                            <span class="sample-check" aria-hidden="true">✓</span><span class="sample-option-label">위약금·항목 누락</span>
+                        <button type="button" class="sample-option" data-sample="3" aria-controls="sample-preview">
+                            <span class="sample-option-label">위약금·항목 누락</span>
                         </button>
                     </div>
                     <aside id="sample-preview" class="sample-preview" role="region" aria-labelledby="sample-preview-title" hidden>
                         <div class="row between">
                             <h2 id="sample-preview-title">계약서 미리보기</h2>
-                            <button type="button" class="btn small sample-preview-close" id="sample-preview-close" aria-label="샘플 미리보기 닫기">×</button>
                         </div>
                         <p id="sample-preview-status" class="hint" role="status" aria-live="polite"></p>
                         <pre id="sample-preview-text" class="sample-preview-text" tabindex="0" aria-label="샘플 계약서 내용"></pre>
@@ -61,32 +60,241 @@
                 </div>
             </div>
         </div>
-        <form id="upload-form" class="card stack">
+        <form id="upload-form" class="card stack" novalidate>
             <div>
-                <label for="file">계약서 파일 (.txt 또는 사진)</label>
-                <input type="file" id="file" accept=".txt,text/plain,image/png,image/jpeg,image/webp,image/gif">
-                <p class="hint">텍스트 파일(.txt)이나 사진(PNG·JPG·WEBP·GIF, 10MB 이하)을 올릴 수 있어요. PDF는 읽지 못하니 내용을 붙여넣어 주세요.</p>
+                <span class="label" id="file-label">계약서 파일 업로드</span>
+                <label for="file" id="file-dropzone" class="upload-dropzone">
+                    <input type="file" id="file" class="upload-file-input" accept=".txt,text/plain,.png,.jpg,.jpeg,.webp,.gif,image/png,image/jpeg,image/webp,image/gif"
+                        aria-labelledby="file-label" aria-describedby="file-formats file-status file-help">
+                    <span class="upload-art" aria-hidden="true">
+                        <svg viewBox="0 0 80 80" fill="none">
+                            <circle cx="40" cy="40" r="38" fill="var(--accent-soft)"/>
+                            <path d="M14 60H34M11 66H31M18 54H38" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/>
+                            <path d="M29 14H49L62 27V62A4 4 0 0 1 58 66H29A4 4 0 0 1 25 62V18A4 4 0 0 1 29 14Z" fill="var(--card)" stroke="currentColor" stroke-width="2.5"/>
+                            <path d="M48 15V29H61M43 55V37M36 44L43 37L50 44" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </span>
+                    <span class="upload-copy">
+                        <strong id="file-prompt">계약서를 끌어오거나 눌러서 첨부해 주세요</strong>
+                        <span id="file-name" class="upload-file-name" hidden></span>
+                        <span id="file-formats" class="upload-formats">TXT · PNG · JPG · WebP · GIF · 최대 10MB</span>
+                    </span>
+                </label>
+                <p id="file-status" class="hint upload-file-status" role="status" aria-live="polite" hidden></p>
+                <p id="file-help" class="hint">PDF는 읽지 못하니 내용을 아래에 붙여넣어 주세요. 파일을 선택하면 파일을 먼저 읽어요.</p>
             </div>
             <div id="image-consent">
-                <label class="check"><input type="checkbox" id="consent"> AI(Codex)로 계약서를 읽어 항목을 자동으로 채우기</label>
-                <p class="hint">체크하면 올린 사진과 붙여넣은 내용이 AI로 전송됩니다. 사진은 반드시 체크해야 하고, "소정근로시간: 오전 10시부터 오후 3시까지"처럼 문장으로 쓴 계약서도 체크하면 정확하게 읽어요. 체크하지 않으면 "근무 시간: 14:00 ~ 18:30"처럼 줄마다 항목이 적힌 형식만 읽습니다. 주민등록번호·전화번호·계좌번호는 가린 뒤 올려 주세요. 분석에는 수십 초가 걸릴 수 있고 사진은 끝나면 서버에서 바로 지워집니다.</p>
+                <label class="check"><input type="checkbox" id="consent" aria-describedby="consent-help"> AI(Codex)로 계약서를 읽어 항목을 자동으로 채우기</label>
+                <p id="consent-help" class="hint">체크하면 업로드한 파일과 붙여넣은 계약서 내용이 AI로 전송됩니다. 사진은 반드시 체크해야 하고, "소정근로시간: 오전 10시부터 오후 3시까지"처럼 문장으로 쓴 계약서도 체크하면 정확하게 읽어요. 체크하지 않으면 "근무 시간: 14:00 ~ 18:30"처럼 줄마다 항목이 적힌 형식만 읽습니다. 주민등록번호·전화번호·계좌번호는 가린 뒤 올려 주세요. 분석에는 수십 초가 걸릴 수 있고 사진은 끝나면 서버에서 바로 지워집니다.</p>
             </div>
             <div>
-                <div class="row between">
-                    <label for="text">또는 계약서 내용 붙여넣기</label>
-
+                <label for="text">계약서 내용 붙여넣기</label>
+                <textarea id="text" rows="12" placeholder="예) 사용자: ○○상점&#10;근무 장소: ...&#10;시급은 10,500원이며 ..." aria-describedby="text-help"></textarea>
+                <p id="text-help" class="hint">파일이 없으면 붙여넣은 내용을 읽어요. AI 전송에 동의하지 않으면 줄마다 항목이 적힌 형식으로 입력해 주세요.</p>
+            </div>
+            <div class="stack" id="manual-fields">
+                <h2>계약 항목 직접 입력</h2>
+                <p class="hint">파일과 붙여넣은 내용이 없으면 아래 항목을 확인 화면으로 가져가요. 직접 입력한 항목은 AI로 전송하지 않아요.</p>
+                <div class="grid two">
+                    <div><label for="employerName">사업장 이름</label><input id="employerName" type="text"></div>
+                    <div><label for="workplace">근무 장소</label><input id="workplace" type="text"></div>
+                    <div><label for="hourlyWage">시급 (원)</label><input id="hourlyWage" type="number" min="0"></div>
+                    <div><label for="payDay">급여일 (매월 며칠)</label><input id="payDay" type="number" min="1" max="31"></div>
+                    <div><span class="label" id="startTime-label">근무 시작 시간</span><div id="startTime" class="contract-time" role="group" aria-labelledby="startTime-label">
+                        <select aria-label="시작 시">
+                            <option value="">시</option>
+                            <option value="00">00시</option>
+                            <option value="01">01시</option>
+                            <option value="02">02시</option>
+                            <option value="03">03시</option>
+                            <option value="04">04시</option>
+                            <option value="05">05시</option>
+                            <option value="06">06시</option>
+                            <option value="07">07시</option>
+                            <option value="08">08시</option>
+                            <option value="09">09시</option>
+                            <option value="10">10시</option>
+                            <option value="11">11시</option>
+                            <option value="12">12시</option>
+                            <option value="13">13시</option>
+                            <option value="14">14시</option>
+                            <option value="15">15시</option>
+                            <option value="16">16시</option>
+                            <option value="17">17시</option>
+                            <option value="18">18시</option>
+                            <option value="19">19시</option>
+                            <option value="20">20시</option>
+                            <option value="21">21시</option>
+                            <option value="22">22시</option>
+                            <option value="23">23시</option>
+                        </select>
+                        <select aria-label="시작 분">
+                            <option value="00">00분</option>
+                            <option value="01">01분</option>
+                            <option value="02">02분</option>
+                            <option value="03">03분</option>
+                            <option value="04">04분</option>
+                            <option value="05">05분</option>
+                            <option value="06">06분</option>
+                            <option value="07">07분</option>
+                            <option value="08">08분</option>
+                            <option value="09">09분</option>
+                            <option value="10">10분</option>
+                            <option value="11">11분</option>
+                            <option value="12">12분</option>
+                            <option value="13">13분</option>
+                            <option value="14">14분</option>
+                            <option value="15">15분</option>
+                            <option value="16">16분</option>
+                            <option value="17">17분</option>
+                            <option value="18">18분</option>
+                            <option value="19">19분</option>
+                            <option value="20">20분</option>
+                            <option value="21">21분</option>
+                            <option value="22">22분</option>
+                            <option value="23">23분</option>
+                            <option value="24">24분</option>
+                            <option value="25">25분</option>
+                            <option value="26">26분</option>
+                            <option value="27">27분</option>
+                            <option value="28">28분</option>
+                            <option value="29">29분</option>
+                            <option value="30">30분</option>
+                            <option value="31">31분</option>
+                            <option value="32">32분</option>
+                            <option value="33">33분</option>
+                            <option value="34">34분</option>
+                            <option value="35">35분</option>
+                            <option value="36">36분</option>
+                            <option value="37">37분</option>
+                            <option value="38">38분</option>
+                            <option value="39">39분</option>
+                            <option value="40">40분</option>
+                            <option value="41">41분</option>
+                            <option value="42">42분</option>
+                            <option value="43">43분</option>
+                            <option value="44">44분</option>
+                            <option value="45">45분</option>
+                            <option value="46">46분</option>
+                            <option value="47">47분</option>
+                            <option value="48">48분</option>
+                            <option value="49">49분</option>
+                            <option value="50">50분</option>
+                            <option value="51">51분</option>
+                            <option value="52">52분</option>
+                            <option value="53">53분</option>
+                            <option value="54">54분</option>
+                            <option value="55">55분</option>
+                            <option value="56">56분</option>
+                            <option value="57">57분</option>
+                            <option value="58">58분</option>
+                            <option value="59">59분</option>
+                        </select>
+                    </div></div>
+                    <div><span class="label" id="endTime-label">근무 종료 시간</span><div id="endTime" class="contract-time" role="group" aria-labelledby="endTime-label">
+                        <select aria-label="종료 시">
+                            <option value="">시</option>
+                            <option value="00">00시</option>
+                            <option value="01">01시</option>
+                            <option value="02">02시</option>
+                            <option value="03">03시</option>
+                            <option value="04">04시</option>
+                            <option value="05">05시</option>
+                            <option value="06">06시</option>
+                            <option value="07">07시</option>
+                            <option value="08">08시</option>
+                            <option value="09">09시</option>
+                            <option value="10">10시</option>
+                            <option value="11">11시</option>
+                            <option value="12">12시</option>
+                            <option value="13">13시</option>
+                            <option value="14">14시</option>
+                            <option value="15">15시</option>
+                            <option value="16">16시</option>
+                            <option value="17">17시</option>
+                            <option value="18">18시</option>
+                            <option value="19">19시</option>
+                            <option value="20">20시</option>
+                            <option value="21">21시</option>
+                            <option value="22">22시</option>
+                            <option value="23">23시</option>
+                        </select>
+                        <select aria-label="종료 분">
+                            <option value="00">00분</option>
+                            <option value="01">01분</option>
+                            <option value="02">02분</option>
+                            <option value="03">03분</option>
+                            <option value="04">04분</option>
+                            <option value="05">05분</option>
+                            <option value="06">06분</option>
+                            <option value="07">07분</option>
+                            <option value="08">08분</option>
+                            <option value="09">09분</option>
+                            <option value="10">10분</option>
+                            <option value="11">11분</option>
+                            <option value="12">12분</option>
+                            <option value="13">13분</option>
+                            <option value="14">14분</option>
+                            <option value="15">15분</option>
+                            <option value="16">16분</option>
+                            <option value="17">17분</option>
+                            <option value="18">18분</option>
+                            <option value="19">19분</option>
+                            <option value="20">20분</option>
+                            <option value="21">21분</option>
+                            <option value="22">22분</option>
+                            <option value="23">23분</option>
+                            <option value="24">24분</option>
+                            <option value="25">25분</option>
+                            <option value="26">26분</option>
+                            <option value="27">27분</option>
+                            <option value="28">28분</option>
+                            <option value="29">29분</option>
+                            <option value="30">30분</option>
+                            <option value="31">31분</option>
+                            <option value="32">32분</option>
+                            <option value="33">33분</option>
+                            <option value="34">34분</option>
+                            <option value="35">35분</option>
+                            <option value="36">36분</option>
+                            <option value="37">37분</option>
+                            <option value="38">38분</option>
+                            <option value="39">39분</option>
+                            <option value="40">40분</option>
+                            <option value="41">41분</option>
+                            <option value="42">42분</option>
+                            <option value="43">43분</option>
+                            <option value="44">44분</option>
+                            <option value="45">45분</option>
+                            <option value="46">46분</option>
+                            <option value="47">47분</option>
+                            <option value="48">48분</option>
+                            <option value="49">49분</option>
+                            <option value="50">50분</option>
+                            <option value="51">51분</option>
+                            <option value="52">52분</option>
+                            <option value="53">53분</option>
+                            <option value="54">54분</option>
+                            <option value="55">55분</option>
+                            <option value="56">56분</option>
+                            <option value="57">57분</option>
+                            <option value="58">58분</option>
+                            <option value="59">59분</option>
+                        </select>
+                    </div></div>
                 </div>
-                <textarea id="text" rows="12" placeholder="예) 사용자: ○○상점&#10;근무 장소: ...&#10;시급은 10,500원이며 ..."></textarea>
-                <p class="hint">"근무 시간: 14:00 ~ 18:30"처럼 항목이 줄마다 적혀 있을수록 정확하게 읽습니다. 파일을 선택하면 파일을 우선 사용합니다.</p>
             </div>
             <div id="message" class="notice" role="alert" hidden></div>
             <div class="row end">
                 <a class="btn" href="/confirm.html">직접 입력하기</a>
-                <button type="submit" class="btn primary" id="submit">항목 추출하기</button>
+                <button type="submit" class="btn primary" id="submit">다음</button>
             </div>
         </form>
         <p class="muted small">주민등록번호·연락처 등 개인정보는 지우고 올려 주세요. 서버는 내용을 저장하지 않으며, 추출 결과는 이 브라우저에만 저장됩니다.</p>
     </main>
-    <footer>본 서비스는 정보 제공용이며 법률 자문이 아닙니다</footer>
+    <footer>
+        <p>본 서비스는 정보 제공용이며 법률 자문이 아닙니다</p>
+        <p>© RE: 지원 from DANKOOK UNIVERSITY Department of Software. All rights reserved.</p>
+    </footer>
 </body>
 </html>

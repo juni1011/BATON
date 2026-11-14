@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>캘린더 | 알바 첫걸음</title>
-    <link rel="stylesheet" href="/css/common.css">
+    <title>캘린더 | 첫걸음</title>
+    <link rel="stylesheet" href="/css/common.css?v=schedule-rows">
     <link rel="icon" href="/images/logo-b2-mark.svg" type="image/svg+xml">
     <meta name="theme-color" content="#9B3F3F">
     <script src="/js/common.js" defer></script>
-    <script src="/js/ui.js" defer></script>
+    <script src="/js/ui.js?v=first-step-nav" defer></script>
     <script src="/js/calendar.js" defer></script>
 </head>
 <body class="portal calendar-page">
@@ -20,10 +20,10 @@
             </nav>
         </div>
         <nav class="primary-nav" aria-label="공통 메뉴">
-            <a class="site-name" href="/index.html" aria-label="알바 첫걸음 홈"><img class="site-logo" src="/images/logo-b2.svg" alt="알바 첫걸음" width="220" height="48"></a>
-            <a href="/upload.html">계약서 점검</a>
-            <a href="/support.html">지원사업 추천</a>
-            <a href="/calendar.html">캘린더</a>
+            <a class="site-name" href="/index.html" aria-label="첫걸음 홈"><img class="site-mark" src="/images/logo-b2-mark.svg" alt="" width="56" height="56"><span class="site-wordmark">첫걸음</span></a>
+            <a href="/upload.html?v=first-step-nav">계약서 점검</a>
+            <a href="/support.html?v=first-step-nav">지원사업 추천</a>
+            <a href="/calendar.html?v=first-step-nav">캘린더</a>
         </nav>
     </header>
     <main>
@@ -57,15 +57,21 @@
                     <h2 id="add-title">개인 일정 추가</h2>
                     <form id="add-form" class="stack">
                         <div><label for="title">제목</label><input id="title" type="text" required maxlength="60"></div>
-                        <div class="form-grid">
-                            <div><label for="date">날짜</label><input id="date" type="date" required></div>
-                            <div>
-                                <label for="type">종류</label>
-                                <select id="type"><option value="CUSTOM">내 일정</option><option value="TODO">할 일</option></select>
+                        <div><label for="date">날짜</label><input id="date" type="date" required></div>
+                        <div class="schedule-times" role="group" aria-labelledby="schedule-time-label">
+                            <span class="label" id="schedule-time-label">시간</span>
+                            <div class="schedule-clock">
+                                <span>시작</span>
+                                <select id="startHour" aria-label="시작 시"><option value="">시</option></select>
+                                <select id="startMinute" aria-label="시작 분"></select>
                             </div>
-                            <div><label for="startTime">시작 (선택)</label><input id="startTime" type="time"></div>
-                            <div><label for="endTime">종료 (선택)</label><input id="endTime" type="time"></div>
+                            <div class="schedule-clock">
+                                <span>종료</span>
+                                <select id="endHour" aria-label="종료 시"><option value="">시</option></select>
+                                <select id="endMinute" aria-label="종료 분"></select>
+                            </div>
                         </div>
+                        <p class="hint">시작과 종료 시간을 비워 두면 종일 일정으로 저장돼요.</p>
                         <div><label for="description">메모 (선택)</label><input id="description" type="text" maxlength="200"></div>
                         <div id="message" class="notice" role="status" hidden></div>
                         <div class="row end"><button type="submit" class="btn primary">일정 저장</button></div>
@@ -74,6 +80,9 @@
             </div>
         </div>
     </main>
-    <footer>Made by RE: 지원 Corporation</footer>
+    <footer>
+        <p>본 서비스는 정보 제공용이며 법률 자문이 아닙니다</p>
+        <p>© RE: 지원 from DANKOOK UNIVERSITY Department of Software. All rights reserved.</p>
+    </footer>
 </body>
 </html>

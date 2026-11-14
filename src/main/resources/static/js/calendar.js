@@ -130,6 +130,24 @@ document.addEventListener("DOMContentLoaded", () => {
         field("title").focus();
     });
 
+    const startHour = field("startHour");
+    const endHour = field("endHour");
+    for (const prefix of ["start", "end"]) {
+        const hour = field(prefix + "Hour");
+        const minute = field(prefix + "Minute");
+        for (let value = 0; value < 24; value++) {
+            hour.add(new Option(pad(value) + "시", pad(value)));
+        }
+        for (let value = 0; value < 60; value++) {
+            minute.add(new Option(pad(value) + "분", pad(value)));
+        }
+    }
+
+    function readTime(prefix) {
+        const hour = field(prefix + "Hour").value;
+        return hour === "" ? null : hour + ":" + field(prefix + "Minute").value;
+    }
+
     addForm.addEventListener("submit", event => {
         event.preventDefault();
         clearTimeout(messageTimer);
@@ -143,20 +161,22 @@ document.addEventListener("DOMContentLoaded", () => {
             field("title").focus();
             return;
         }
-        const start = field("startTime").value || null;
-        const end = field("endTime").value || null;
+        const start = readTime("start");
+        const end = readTime("end");
         if (end && !start) {
-            notify(message, "종료 시각을 입력하려면 시작 시각도 선택해 주세요.", "error");
-            field("startTime").focus();
+            notify(message, "종료 시간을 저장하려면 시작 시간도 입력해 주세요.", "error");
+            startHour.focus();
             return;
         }
+        const type = "CUSTOM";
         if (start && end && end <= start) {
             notify(message, "종료 시각은 시작 시각보다 늦어야 합니다.", "error");
+            endHour.focus();
             return;
         }
         events.push({
             id: "custom-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-            title, type: field("type").value, date, startTime: start, endTime: start ? end : null,
+            title, type, date, startTime: start, endTime: end,
             description: field("description").value.trim() || null, sourceLink: "/calendar.html"
         });
         Easyton.saveCalendarEvents(events);
@@ -175,11 +195,11 @@ document.addEventListener("DOMContentLoaded", () => {
             messageAnimation = null;
             messageTimer = null;
         }, 3000);
-        hidden.delete(field("type").value);
+        hidden.delete(type);
         selected = date;
         year = Number(date.slice(0, 4));
         month = Number(date.slice(5, 7));
-        for (const id of ["title", "startTime", "endTime", "description"]) field(id).value = "";
+        addForm.reset();
         renderAll();
     });
 
