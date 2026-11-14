@@ -26,7 +26,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * 계약서 사진 또는 문장형 텍스트를 Gemini API({@code generateContent})로 읽어 {@link ContractInfo}로 바꾼다.
+ * 계약서 사진 또는 문장형 텍스트를 AI API({@code generateContent})로 읽어 {@link ContractInfo}로 바꾼다.
  * 결과는 JSON 스키마(responseJsonSchema)로 받은 뒤 값의 범위를 다시 검사한다. 사진은 디스크에 저장하지 않고,
  * 사진과 추출 내용은 로그에 남기지 않는다. 사진과 텍스트는 Google의 외부 AI 서비스로 전송되므로
  * 호출하는 쪽이 사용자 동의를 확인해야 한다.

@@ -29,7 +29,7 @@ docker compose up -d --wait
 
 접속 주소: http://localhost:8080/ (index.html).
 화면: /signup.html(회원가입), /upload.html(계약서 입력), /confirm.html(추출값 확인), /report.html(점검), /support.html(지원사업 추천), /calendar.html(캘린더).
-현재 구현은 텍스트 파일, 붙여넣기, 가상 샘플 3종을 규칙으로 처리하고, 계약서 사진(PNG·JPG·WEBP·GIF)은 Gemini API로 읽습니다(아래 "계약서 사진 분석"). PDF는 아직 읽지 못합니다. 지원사업은 `YOUTH_API_KEY`(온통청년 Open API 인증키)를 프로세스 환경변수로 주면 실제 청년정책을, 없으면 가상 예시를 사용합니다.
+현재 구현은 텍스트 파일, 붙여넣기, 가상 샘플 3종을 규칙으로 처리하고, 계약서 사진(PNG·JPG·WEBP·GIF)은 Gemini API로 읽습니다(아래 "계약서 사진 분석"). PDF는 아직 읽지 못합니다. 지원사업은 `YOUTH_API_KEY`(온통청년 Open API 인증키)를 프로세스 환경변수로 주면 실제 청년정책을 보여 주고, 없으면 추천할 사업이 비어 있습니다.
 서버 종료는 Ctrl+C를 사용합니다.
 
 ### 계약서 사진 분석 (Gemini)

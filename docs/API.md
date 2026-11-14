@@ -3,9 +3,8 @@
 ## 범위와 공통 규칙
 
 회원가입 API는 MySQL에 회원을 저장한다. 계약서 처리·점검·일정 생성 및 지원사업 매칭 API도 제공한다.
-지원사업 매칭은 외부 API(공공데이터 등) 없이 코드에 들어 있는 가상 사업 목록과 프로필을 비교한다.
+지원사업 매칭은 온통청년 청년정책 Open API에서 받은 실제 정책 목록과 프로필을 비교한다.
 캘린더는 서버 API 없이 화면에서 localStorage로만 동작한다.
-모든 사업·기관·조건·일정·서류는 가상이며 실제 제도가 아니다.
 
 입력하지 않은 값은 `null`로 둔다. 0, false, 빈 문자열 등으로 추정하지 않는다.
 날짜는 `yyyy-MM-dd`, 시간은 `HH:mm`, enum은 대문자 문자열이다.
@@ -91,8 +90,8 @@ DB 연결 설정과 로컬 실행 방법은 [README.md](../README.md)를 참고�
 {
   "profile": {
     "age": 22,
-    "sido": "가상시",
-    "sigungu": "상상구",
+    "sido": "서울특별시",
+    "sigungu": null,
     "status": "대학생",
     "housing": "월세",
     "householdIncomeLevel": "미확인"
@@ -100,55 +99,18 @@ DB 연결 설정과 로컬 실행 방법은 [README.md](../README.md)를 참고�
 }
 ```
 
-응답 `200 application/json` (List<SupportMatch>), 5건 중 2건만 보인 예시:
-
-```json
-[
-  {
-    "id": "support-example-a",
-    "name": "예시 청년 교통비 지원",
-    "organization": "가상청년센터",
-    "verdict": "ELIGIBLE",
-    "reason": "[가상 예시] 나이 조건을 충족합니다.",
-    "applyStart": "2026-11-01",
-    "applyEnd": "2026-11-30",
-    "applyUrl": "https://example.com/support-a",
-    "requiredDocuments": [
-      "예시 신청서"
-    ],
-    "sample": true
-  },
-  {
-    "id": "support-example-b",
-    "name": "예시 대학생 장학 지원",
-    "organization": "가상지원재단",
-    "verdict": "NEED_CHECK",
-    "reason": "[가상 예시] 확인이 필요한 조건: 가구 소득(중위소득 100% 이하).",
-    "applyStart": "2026-12-01",
-    "applyEnd": "2026-12-31",
-    "applyUrl": "https://example.com/support-b",
-    "requiredDocuments": [
-      "예시 신청서",
-      "재학증명서",
-      "소득 확인서"
-    ],
-    "sample": true
-  }
-]
-```
-
-응답 항목 `sample`은 가상 예시 사업이면 true, 온통청년 실제 정책이면 false다.
+응답 `200 application/json` (List<SupportMatch>). 항목은 `id`, `name`, `organization`, `verdict`, `reason`, `applyStart`, `applyEnd`, `applyUrl`, `requiredDocuments`, `categories`다.
+`YOUTH_API_KEY`가 없거나 아직 정책을 한 건도 받지 못했으면 빈 배열(`[]`)을 돌려준다. 가상 사업은 만들지 않는다.
 
 `MatchVerdict`: ELIGIBLE, NEED_CHECK, NOT_ELIGIBLE 순으로 정렬하고, 같은 판정 안에서는 신청 마감이 가까운 사업을 먼저(마감일을 모르면 뒤로) 둔다.
 응답은 최대 50건이다.
-`SupportProgramSource`가 사업 목록을 공급한다. 환경변수 `YOUTH_API_KEY`가 없으면 `SampleSupportProgramSource`의 가상 사업 5건을,
+`SupportProgramSource`가 사업 목록을 공급한다. 환경변수 `YOUTH_API_KEY`가 없으면 빈 목록을 쓰고,
 있으면 `YouthCenterProgramSource`가 온통청년 청년정책 Open API(`/go/ythip/getPlcy`)에서 받은 실제 정책을 쓴다.
-실제 정책은 서버 시작 직후와 24시간마다 전체를 받아 메모리에 두며, 갱신에 실패하면 마지막 성공 목록을 유지하고 첫 로딩 전에는 가상 사업을 돌려준다.
+실제 정책은 서버 시작 직후와 24시간마다 전체를 받아 메모리에 두며, 갱신에 실패하면 마지막 성공 목록을 유지하고 첫 로딩 전에는 빈 목록을 돌려준다.
 신청 마감이 지난 사업은 제외하고, 신청 기간이 "상시" 등으로 비어 있으면 날짜 없이 남긴다.
 실제 정책은 나이(0은 제한 없음)와 신청 기간만 판정에 쓰고, 소득·신분·거주지는 코드값이라 해석하지 않고 항상 "확인 필요"로 둔다.
 따라서 실제 정책은 ELIGIBLE이 되지 않는다. 비교 조건은 나이, 시·도, 상태, 거주 형태, 가구 소득이다.
 조건에 맞지 않는 값이 하나라도 있으면 NOT_ELIGIBLE, 값이 없거나 "미확인"인 조건이 있으면 NEED_CHECK다.
-example.com은 예시 링크다. 실제 지원 조건이나 금액을 뜻하지 않는다.
 
 프로필 선택지: status는 대학생·구직자·재직자·기타, housing은 월세·전세·자가·가족과 거주·기숙사·기타,
 householdIncomeLevel은 중위소득 50% 이하·100% 이하·150% 이하·150% 초과·미확인이다. profile은 null일 수 있다.
@@ -160,13 +122,13 @@ JSON 본문 형식이 깨지거나 본문이 없으면 기본 Spring MVC 오류 
 
 ```json
 {
-  "id": "support-support-example-a",
-  "title": "예시 청년 교통비 지원 신청 마감",
+  "id": "support-<정책 ID>",
+  "title": "<사업명> 신청 마감",
   "type": "SUPPORT_DEADLINE",
   "date": "2026-11-30",
   "startTime": null,
   "endTime": null,
-  "description": "가상청년센터",
+  "description": "<기관명>",
   "sourceLink": "/support.html"
 }
 ```

@@ -14,8 +14,8 @@ class SupportMatcherTests {
                 null, end, null, List.of(), unverified);
     }
 
-    private static SupportMatcher matcher(boolean sample, List<SupportProgram> programs) {
-        return new SupportMatcher(() -> new SupportProgramSource.Catalog(programs, sample));
+    private static SupportMatcher matcher(List<SupportProgram> programs) {
+        return new SupportMatcher(() -> new SupportProgramSource.Catalog(programs));
     }
 
     private static MatchRequest request(Integer age) {
@@ -24,16 +24,14 @@ class SupportMatcherTests {
 
     @Test
     void unverifiedConditionsAreNeverEligible() {
-        var matches = matcher(false, List.of(program("a", null, null, null, List.of("세부 자격")))).match(request(22));
+        var matches = matcher(List.of(program("a", null, null, null, List.of("세부 자격")))).match(request(22));
         assertEquals(MatchVerdict.NEED_CHECK, matches.get(0).verdict());
         assertTrue(matches.get(0).reason().contains("세부 자격"));
-        assertFalse(matches.get(0).reason().startsWith("[가상 예시]"));
-        assertFalse(matches.get(0).sample());
     }
 
     @Test
     void ageMismatchIsNotEligibleAndSortedLast() {
-        var matches = matcher(false, List.of(
+        var matches = matcher(List.of(
                 program("old", 19, 34, null, List.of("세부 자격")),
                 program("ok", 19, 39, null, List.of("세부 자격")))).match(request(36));
         assertEquals("ok", matches.get(0).id());
@@ -42,7 +40,7 @@ class SupportMatcherTests {
 
     @Test
     void sameVerdictIsSortedByNearestDeadlineWithUnknownLast() {
-        var matches = matcher(false, List.of(
+        var matches = matcher(List.of(
                 program("none", null, null, null, List.of("x")),
                 program("late", null, null, LocalDate.of(2027, 1, 1), List.of("x")),
                 program("soon", null, null, LocalDate.of(2026, 12, 1), List.of("x")))).match(request(22));
@@ -53,16 +51,9 @@ class SupportMatcherTests {
     void resultIsLimitedToTopFifty() {
         List<SupportProgram> many = new ArrayList<>();
         for (int i = 0; i < 120; i++) many.add(program("p" + i, i < 100 ? 60 : null, null, null, List.of("x")));
-        var matches = matcher(false, many).match(request(22));
+        var matches = matcher(many).match(request(22));
         assertEquals(SupportMatcher.MAX_RESULTS, matches.size());
         // 나이 조건이 맞지 않는 사업(100건)보다 가능성이 있는 사업(20건)이 먼저 담긴다.
         assertEquals(20, matches.stream().filter(m -> m.verdict() == MatchVerdict.NEED_CHECK).count());
-    }
-
-    @Test
-    void sampleCatalogKeepsExampleLabel() {
-        var matches = matcher(true, List.of(program("a", null, null, null, List.of()))).match(request(22));
-        assertTrue(matches.get(0).reason().startsWith("[가상 예시]"));
-        assertTrue(matches.get(0).sample());
     }
 }
