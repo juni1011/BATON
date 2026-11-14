@@ -118,10 +118,18 @@ public class ContractChecker {
         }
     }
 
+    private static long shiftMinutes(ContractInfo.WorkTime time) {
+        if (time.startTime() == null || time.endTime() == null) return 0;
+        long minutes = Duration.between(time.startTime(), time.endTime()).toMinutes();
+        return minutes <= 0 ? minutes + 24 * 60 : minutes;
+    }
+
     private void checkBreak(ContractInfo c, List<CheckItem> items) {
-        if (c.startTime() == null || c.endTime() == null) return;
-        long span = Duration.between(c.startTime(), c.endTime()).toMinutes();
-        if (span <= 0) span += 24 * 60;
+        long span = c.workTimes() == null
+                ? shiftMinutes(new ContractInfo.WorkTime(c.startTime(), c.endTime()))
+                : c.workDays() == null ? 0 : c.workDays().stream()
+                        .map(c::timeOn).mapToLong(ContractChecker::shiftMinutes).max().orElse(0);
+        if (span == 0) return;
         String clause = clause(c, "휴게");
         String law = "근로기준법 제54조(휴게)";
         if (c.breakMinutes() == null) {
@@ -163,7 +171,9 @@ public class ContractChecker {
         missing(items, c.jobDescription() == null, "job-description", "업무 내용", "어떤 업무를 하는지");
         missing(items, c.weeklyHours() == null, "weekly-hours", "소정근로시간", "주 몇 시간 근무하는지");
         missing(items, c.workDays() == null, "work-days", "근무 요일", "무슨 요일에 근무하는지");
-        missing(items, c.startTime() == null || c.endTime() == null, "work-time", "근무 시간",
+        boolean missingTime = c.workTimes() == null ? c.startTime() == null || c.endTime() == null
+                : c.workDays() == null || c.workDays().stream().map(c::timeOn).anyMatch(time -> shiftMinutes(time) == 0);
+        missing(items, missingTime, "work-time", "근무 시간",
                 "근무 시작·종료 시각이 언제인지");
         missing(items, c.contractStart() == null, "contract-start", "계약 시작일", "근무 시작일이 언제인지");
     }

@@ -32,8 +32,9 @@ public class CalendarEventGenerator {
             if (c.workplace() != null) detail = c.workplace() + " · " + detail;
             for (LocalDate day = start; !day.isAfter(end); day = day.plusDays(1)) {
                 if (c.workDays().contains(day.getDayOfWeek())) {
+                    var time = c.timeOn(day.getDayOfWeek());
                     events.add(new CalendarEvent("work-" + day, employer + " 근무", EventType.WORK, day,
-                            c.startTime(), c.endTime(), detail, SOURCE));
+                            time.startTime(), time.endTime(), detail, SOURCE));
                 }
             }
         }

@@ -4,14 +4,44 @@
 document.addEventListener("DOMContentLoaded", () => {
     const { errorText, notify } = EasytonUI;
     const form = document.getElementById("upload-form");
-    const times = {
-        startTime: EasytonUI.contractTime("startTime"),
-        endTime: EasytonUI.contractTime("endTime")
-    };
 
     const fileInput = document.getElementById("file");
-    const textInput = document.getElementById("text");
     const manualFields = document.getElementById("manual-fields");
+    const hours = document.getElementById("workday-hours");
+    const startTime = EasytonUI.contractTime("startTime");
+    const endTime = EasytonUI.contractTime("endTime");
+    const dayButtons = [...document.querySelectorAll("#workday-buttons button")];
+    const schedule = new Map();
+    let activeDay = null;
+    function showDay(day) {
+        activeDay = day;
+        const time = schedule.get(day);
+        startTime.value = time?.startTime ?? "";
+        endTime.value = time?.endTime ?? "";
+        document.getElementById("workday-editor-status").textContent = day
+            ? EasytonUI.DAY_LABELS[day] + "요일 근무 시간" : "요일을 선택해 주세요. (같은 요일을 두 번 누르면 선택이 취소돼요.)";
+        for (const input of hours.querySelectorAll("select")) input.disabled = !day;
+        for (const button of dayButtons) {
+            button.setAttribute("aria-pressed", String(schedule.has(button.dataset.day)));
+            button.classList.toggle("is-editing", button.dataset.day === day);
+        }
+    }
+    for (const button of dayButtons) {
+        button.addEventListener("click", () => {
+            const day = button.dataset.day;
+            if (day === activeDay) {
+                schedule.delete(day);
+                showDay([...schedule.keys()].pop() ?? null);
+            } else {
+                if (!schedule.has(day)) schedule.set(day, {});
+                showDay(day);
+            }
+        });
+    }
+    hours.addEventListener("change", () => {
+        if (activeDay) schedule.set(activeDay, { startTime: startTime.value || null, endTime: endTime.value || null });
+    });
+    showDay(null);
     const consent = document.getElementById("consent");
     /** AI 전송 동의는 사용자가 직접 체크한 선택만 이 브라우저에 기억한다. */
     try { consent.checked = localStorage.getItem("easyton.aiConsent") === "true"; } catch { /* 저장소를 못 쓰면 기본값 */ }
@@ -263,21 +293,24 @@ document.addEventListener("DOMContentLoaded", () => {
         event.preventDefault();
         if (submit.disabled) return;
         const file = fileInput.files[0] || null;
-        const text = textInput.value.trim();
         const fields = {};
-        // 파일, 붙여넣은 원문, 직접 입력 항목 순서로 사용한다.
+        // 첨부 파일을 우선 사용한다.
         // 직접 입력 항목만 있으면 서버나 AI로 보내지 않고 확인 화면에 전달한다.
-        if (!file && !text) {
+        if (!file) {
             for (const input of manualFields.querySelectorAll("input, select")) {
                 if (!input.reportValidity()) return;
             }
-            for (const id of ["employerName", "workplace", "hourlyWage", "payDay", "startTime", "endTime"]) {
-                const input = times[id] || document.getElementById(id);
+            for (const id of ["employerName", "workplace", "hourlyWage", "payDay"]) {
+                const input = document.getElementById(id);
                 const value = input.value.trim();
                 if (value) fields[id] = input.type === "number" ? Number(value) : value;
             }
+            if (schedule.size) {
+                fields.workDays = EasytonUI.DAYS.filter(day => schedule.has(day));
+                fields.workTimes = Object.fromEntries(schedule);
+            }
             if (Object.keys(fields).length === 0) {
-                notify(message, "파일을 선택하거나 계약서 내용을 붙여넣거나 항목을 하나 이상 입력해 주세요.", "error");
+                notify(message, "파일을 선택하거나 계약 항목을 하나 이상 입력해 주세요.", "error");
                 return;
             }
         }
@@ -291,16 +324,15 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
         const useAi = consent.checked;
-        const extracting = Boolean(file || text);
+        const extracting = Boolean(file);
         submit.disabled = true;
         fileInput.disabled = true;
-        textInput.disabled = true;
         consent.disabled = true;
         submit.textContent = extracting ? (useAi ? "AI가 읽는 중… (최대 몇 분)" : "추출하는 중…") : "입력 내용을 여는 중…";
         try {
             const contract = file
                 ? await Easyton.extractContract({ file, consent: useAi })
-                : text ? await Easyton.extractContract({ text, consent: useAi }) : fields;
+                : fields;
             Easyton.saveContractInfo(contract);
             // 이전 계약의 리포트와 계약 일정은 더 이상 맞지 않으므로 지운다. 직접 추가한 일정은 남긴다.
             Easyton.saveCheckReport(null);
@@ -310,7 +342,6 @@ document.addEventListener("DOMContentLoaded", () => {
             notify(message, /^HTTP /.test(error.message) ? errorText(error) : error.message, "error");
             submit.disabled = false;
             fileInput.disabled = false;
-            textInput.disabled = false;
             consent.disabled = false;
             submit.textContent = submitLabel;
         }

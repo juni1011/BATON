@@ -29,7 +29,17 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    let workTimes;
+
     function fill(contract) {
+        workTimes = contract.workTimes;
+        if (workTimes) {
+            dayBox.after(h("p", { class: "hint", text: DAYS.filter(day => workTimes[day]).map(day => {
+                const time = workTimes[day];
+                return DAY_LABELS[day] + " " + (time.startTime ?? "미입력") + "–" + (time.endTime ?? "미입력");
+            }).join(" · ") }));
+            for (const id of ["startTime", "endTime"]) document.getElementById(id).parentElement.hidden = true;
+        }
         for (const id of [...TEXT, ...INTEGER, "weeklyHours"]) field(id).value = contract[id] ?? "";
         for (const id of BOOLEAN) field(id).value = contract[id] === null || contract[id] === undefined ? "" : String(contract[id]);
         for (const box of dayBox.querySelectorAll("input")) box.checked = (contract.workDays || []).includes(box.value);
@@ -46,6 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
         for (const id of BOOLEAN) contract[id] = field(id).value === "" ? null : field(id).value === "true";
         const days = [...dayBox.querySelectorAll("input:checked")].map(box => box.value);
         contract.workDays = days.length ? days : null;
+        if (workTimes) contract.workTimes = Object.fromEntries(days.map(day => [day, workTimes[day] ?? {}]));
         const clauses = field("clauses").value.split("\n").map(line => line.trim()).filter(Boolean);
         contract.clauses = clauses.length ? clauses : null;
         return contract;

@@ -77,3 +77,20 @@
 }
 .check { display: flex; align-items: flex-start; gap: 8px; font-weight: 600; cursor: pointer; }
 .check input { margin-top: 3px; flex: none; }
+
+.manual-contract-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.manual-workdays { grid-column: span 2; }
+#workday-buttons { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
+#workday-buttons .btn { padding: 8px 2px; }
+#workday-buttons button[aria-pressed="true"] {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--ink);
+}
+#workday-hours { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; margin-top: 8px; }
+#workday-hours .hint { grid-column: 1 / -1; margin: 0; }
+@media (max-width: 640px) {
+    .manual-contract-grid { grid-template-columns: minmax(0, 1fr); }
+    .manual-workdays { grid-column: 1; }
+}
+#workday-buttons .is-editing { outline: 2px solid var(--accent-ink); outline-offset: 1px; }
