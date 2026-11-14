@@ -275,7 +275,6 @@ function SupportApp() {
         setLocationMessage('');
         setShowNationalMap(false);
         update('sido', value);
-        runSearch(category, false);
         if (!value) return;
         goToStep(1, { focusId: 'sigungu', automatic: true });
     }
