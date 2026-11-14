@@ -31,10 +31,10 @@ public class SupportMatcher {
         String category = request == null ? null : text(request.category());
         String sido = profile == null ? null : text(profile.sido());
         for (SupportProgram program : catalog.programs()) {
-            if (!regionMatches(program, sido, catalog.sample())) continue;
+            if (!regionMatches(program, sido)) continue;
             if (category != null && program.categories().stream()
                     .noneMatch(value -> categoryKey(value).equals(categoryKey(category)))) continue;
-            matches.add(evaluate(program, profile, catalog.sample()));
+            matches.add(evaluate(program, profile));
         }
         // 가능, 확인 필요, 불가 순으로, 같은 판정 안에서는 마감이 가까운 사업을 먼저(마감일을 모르면 뒤로) 둔다.
         matches.sort(Comparator.<SupportMatch>comparingInt(match -> match.verdict().ordinal())
@@ -69,9 +69,8 @@ public class SupportMatcher {
         };
     }
 
-    private static boolean regionMatches(SupportProgram p, String sido, boolean sample) {
+    private static boolean regionMatches(SupportProgram p, String sido) {
         if (sido == null) return true;
-        if (sample) return p.sido() == null || p.sido().equals(sido);
         String prefix = REGIONS.get(sido);
         if (p.regionCodes().isEmpty()) return true; // 대상 지역을 모르는 정책은 남겨 두고 상세 공고에서 확인하게 한다.
         return p.regionCodes().stream().anyMatch(code -> code.equals("00000") || code.equals("00")
@@ -80,7 +79,7 @@ public class SupportMatcher {
                 || prefix.equals("52") && code.startsWith("45")));
     }
 
-    private SupportMatch evaluate(SupportProgram p, UserProfile profile, boolean sample) {
+    private SupportMatch evaluate(SupportProgram p, UserProfile profile) {
         List<String> failed = new ArrayList<>();
         List<String> unknown = new ArrayList<>();
         List<String> passed = new ArrayList<>();
@@ -129,8 +128,8 @@ public class SupportMatcher {
             reason = passed.isEmpty() ? "별도 조건이 없습니다."
                     : String.join(", ", passed) + " 조건을 충족합니다.";
         }
-        return new SupportMatch(p.id(), p.name(), p.organization(), verdict, (sample ? "[가상 예시] " : "") + reason,
-                p.applyStart(), p.applyEnd(), p.applyUrl(), p.documents(), sample, p.categories());
+        return new SupportMatch(p.id(), p.name(), p.organization(), verdict, reason,
+                p.applyStart(), p.applyEnd(), p.applyUrl(), p.documents(), p.categories());
     }
 
     private static void check(List<String> allowed, String value, String name,

@@ -25,7 +25,7 @@ import tools.jackson.databind.json.JsonMapper;
 /**
  * 온통청년 청년정책 Open API에서 사업 목록을 받아 메모리에 보관한다. {@code YOUTH_API_KEY}가 있을 때만 사용한다.
  * 서버 시작 직후와 하루마다 다시 받으며, 실패하면 마지막으로 성공한 목록을 유지한다.
- * 첫 로딩이 끝나기 전에는 가상 예시 사업을 돌려준다. 인증키는 로그에 남기지 않는다.
+ * 첫 로딩이 끝나기 전에는 빈 목록을 돌려준다. 인증키는 로그에 남기지 않는다.
  */
 @Component
 @Primary
@@ -39,7 +39,6 @@ public class YouthCenterProgramSource implements SupportProgramSource {
     private final String url;
     private final RestClient client;
     private final JsonMapper json;
-    private final SupportProgramSource fallback;
     private final Clock clock;
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(task -> {
         Thread thread = new Thread(task, "youth-policy-refresh");
@@ -50,12 +49,11 @@ public class YouthCenterProgramSource implements SupportProgramSource {
 
     public YouthCenterProgramSource(@Value("${youth.api.key}") String apiKey,
                                     @Value("${youth.api.url:https://www.youthcenter.go.kr/go/ythip/getPlcy}") String url,
-                                    JsonMapper json, SampleSupportProgramSource fallback) {
+                                    JsonMapper json) {
         this.apiKey = apiKey.strip();
         this.url = url;
         this.client = RestClient.create();
         this.json = json;
-        this.fallback = fallback;
         this.clock = Clock.systemDefaultZone();
     }
 
@@ -111,10 +109,9 @@ public class YouthCenterProgramSource implements SupportProgramSource {
     @Override
     public Catalog catalog() {
         List<SupportProgram> loaded = cache;
-        if (loaded.isEmpty()) return fallback.catalog();
+        if (loaded.isEmpty()) return new Catalog(List.of());
         LocalDate today = LocalDate.now(clock);
         // 신청 마감이 지난 사업은 제외한다. 마감일을 모르는 사업(상시 등)은 남긴다.
-        return new Catalog(loaded.stream().filter(p -> p.applyEnd() == null || !p.applyEnd().isBefore(today)).toList(),
-                false);
+        return new Catalog(loaded.stream().filter(p -> p.applyEnd() == null || !p.applyEnd().isBefore(today)).toList());
     }
 }

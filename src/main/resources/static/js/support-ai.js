@@ -23,7 +23,7 @@
             anchor.href = item.url;
             anchor.target = '_blank';
             anchor.rel = 'noopener noreferrer';
-            anchor.textContent = item.name + (item.sample ? ' 신청 페이지 (예시 링크) ↗' : ' 신청 페이지 바로가기 ↗');
+            anchor.textContent = item.name + ' 신청 페이지 바로가기 ↗';
             return anchor;
         }));
         links.hidden = links.children.length === 0;
