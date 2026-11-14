@@ -4,7 +4,8 @@
 
 회원가입 API는 MySQL에 회원을 저장한다. 계약서 처리·점검·일정 생성 및 지원사업 매칭 API도 제공한다.
 지원사업 매칭은 온통청년 청년정책 Open API에서 받은 실제 정책 목록과 프로필을 비교한다.
-캘린더는 서버 API 없이 화면에서 localStorage로만 동작한다.
+캘린더 일정은 화면에서 만들고 저장하며, 서버는 계약 정보로 계약 일정을 생성하는 `POST /api/calendar/events`만 제공한다.
+계약서 점검, 일정, 지원사업 추천(AI 포함) API는 로그인해야 쓸 수 있고, 로그인하지 않으면 `401 {"message":"로그인이 필요합니다."}`를 돌려준다. `/api/auth/**`만 비로그인으로 열려 있다.
 
 입력하지 않은 값은 `null`로 둔다. 0, false, 빈 문자열 등으로 추정하지 않는다.
 날짜는 `yyyy-MM-dd`, 시간은 `HH:mm`, enum은 대문자 문자열이다.
@@ -12,12 +13,14 @@
 ## POST /api/contracts/extract
 
 `multipart/form-data`. `file`(텍스트 파일 또는 사진)이 있으면 파일을, 없으면 `text`를 읽는다. 응답은 `ContractInfo` JSON이다.
+텍스트는 기본적으로 규칙으로 읽고, `consent=true`를 함께 보내면 Gemini API로 읽는다(문장형 계약서용). AI가 실패하면 규칙 결과로 바꾸지 않고 오류를 돌려준다.
 사진(PNG·JPEG·WEBP·GIF, 10MB 이하)은 파일 앞부분의 형식으로 판별하며 서버가 Gemini API로 읽는다.
-사진은 외부 AI로 전송되므로 `consent=true`를 함께 보내야 한다.
+사진과 AI로 읽는 텍스트는 외부 AI로 전송되므로 `consent=true`를 함께 보내야 한다(사진은 `consent=true`가 없으면 400).
 
 | 상태 | 의미 |
 | --- | --- |
 | 400 | 파일과 텍스트가 모두 없음, 또는 사진인데 `consent=true`가 아님 |
+| 401 | 로그인하지 않음 |
 | 413 | 사진이 10MB 초과 |
 | 415 | 텍스트도 지원하는 사진도 아님(PDF 등) |
 | 422 | Gemini 결과를 해석할 수 없음 |
@@ -97,7 +100,7 @@ DB 연결 설정과 로컬 실행 방법은 [README.md](../README.md)를 참고�
 
 ## 계정별 데이터 저장 (로그인 필요)
 
-로그인하면 화면 데이터가 계정에 저장되어 다른 브라우저에서도 이어서 쓸 수 있다. 비로그인 상태는 기존처럼 localStorage에만 저장한다.
+로그인하면 화면 데이터가 계정에 저장되어 다른 브라우저에서도 이어서 쓸 수 있다. 서버 저장에 실패한 값이나 로그인 전에 넣은 값은 localStorage에 남겨 두었다가 다시 보낸다.
 키는 `contract`, `report`, `events`, `profile`, `matches`만 허용하며 값은 임의의 JSON(최대 약 1MB)이다.
 
 - `GET /api/me/data` → `200 {"events":[...],"profile":{...}}` (저장된 키만 포함)
@@ -143,9 +146,24 @@ DB 연결 설정과 로컬 실행 방법은 [README.md](../README.md)를 참고�
 householdIncomeLevel은 중위소득 50% 이하·100% 이하·150% 이하·150% 초과·미확인이다. profile은 null일 수 있다.
 JSON 본문 형식이 깨지거나 본문이 없으면 기본 Spring MVC 오류 응답을 사용한다.
 
-## 캘린더 일정 (프런트 전용)
+## POST /api/supports/ai/recommend
 
-일정은 `easyton.calendarEvents`에 아래 형태의 배열로 저장한다.
+요청은 `/api/supports/match`와 같은 `MatchRequest`(`profile`, `category`)이고, 로그인이 필요하다.
+서버가 규칙으로 걸러 낸 `NOT_ELIGIBLE`이 아닌 후보 중에서 Gemini가 우선 확인할 사업을 최대 3개 골라 사업명과 근거 한 문장을 적는다.
+응답 `200`은 `{"message":"...","links":[{"name","url"}]}`이며, `links`는 답변에 사업명이 나온 후보의 신청 페이지(http·https만)다. 추천할 후보가 없으면 `message`만 담아 `200`으로 돌려준다.
+같은 후보와 조건이면 30분간 저장한 답을 쓰고 Gemini를 다시 부르지 않는다. 오류 응답은 `{"message":"..."}`이다.
+
+| 상태 | 의미 |
+| --- | --- |
+| 401 | 로그인하지 않음 |
+| 429 | AI 사용 한도 초과(메시지는 "서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.") |
+| 502 | AI 인증·모델 설정 오류 또는 응답 실패 |
+| 503 | AI를 쓸 수 없음(API 키 없음) 또는 일시적인 혼잡 |
+
+## 캘린더 일정
+
+`POST /api/calendar/events`는 `ContractInfo` JSON을 받아 근무일, 급여일, 수습 종료일, 계약 종료일을 날짜순으로 돌려준다.
+일정은 화면에서 `easyton.calendarEvents`(로그인하면 계정의 `events`에도)에 아래 형태의 배열로 저장한다.
 
 ```json
 {
