@@ -14,7 +14,10 @@ import org.springframework.stereotype.Component;
 /** ContractInfo를 규칙으로 점검한다. 정보 제공용이며 법률 자문이 아니다. */
 @Component
 public class ContractChecker {
-    /** 연도별 시간급 최저임금(원). 표에 없는 연도는 가장 가까운 연도의 값으로 비교한다. */
+    /**
+     * 연도별 시간급 최저임금(원). 표에 없는 연도는 가장 가까운 연도의 값으로 비교한다.
+     * 출처: 최저임금위원회 의결·고용노동부 고시, 2025~2027년, 확인일 2026-11-14
+     */
     static final Map<Integer, Integer> MINIMUM_WAGE = Map.of(2025, 10030, 2026, 10320, 2027, 10700);
     private static final int FIRST_YEAR = 2025;
     private static final int LAST_YEAR = 2027;

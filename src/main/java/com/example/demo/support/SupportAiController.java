@@ -9,7 +9,6 @@ import java.util.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -79,25 +78,6 @@ public class SupportAiController {
     }
 
     private record CachedAnswer(String answer, long expires) {}
-
-    @PostMapping("/resume")
-    public ResponseEntity<?> resume(@RequestParam("file") MultipartFile file) throws IOException {
-        if (file.isEmpty() || file.getSize() > 5 * 1024 * 1024) return message(400, "5MB 이하의 이력서를 선택해 주세요.");
-        byte[] bytes = file.getBytes();
-        String name = Objects.toString(file.getOriginalFilename(), "").toLowerCase(Locale.ROOT);
-        Map<String, ?> part;
-        if (name.endsWith(".pdf") && new String(bytes, 0, Math.min(5, bytes.length), StandardCharsets.US_ASCII).equals("%PDF-")) {
-            part = Map.of("inline_data", Map.of("mime_type", "application/pdf", "data", Base64.getEncoder().encodeToString(bytes)));
-        } else if (name.endsWith(".txt")) {
-            String text = new String(bytes, StandardCharsets.UTF_8);
-            if (text.isBlank() || text.length() > 60000 || text.contains("\uFFFD") || text.indexOf(0) >= 0)
-                return message(400, "UTF-8 형식의 6만 자 이하 텍스트를 선택해 주세요.");
-            part = Map.of("text", text);
-        } else return message(400, "PDF 또는 UTF-8 TXT 이력서를 선택해 주세요.");
-        return generate("이력서를 한국어로 검토하라. 내용이 부족하거나 읽을 수 없으면 그렇게 말하라. "
-                + "직무 관련성, 경험의 구체성, 문장 명료성을 보고 실제 발견한 문제마다 근거와 수정 예시를 함께 제시하라. "
-                + "경력이나 수치를 지어내지 말고 개인정보를 재출력하지 마라. 평문으로 답하라.", part);
-    }
 
     private ResponseEntity<?> generate(String instruction, Map<String, ?> part) {
         if (key.isBlank()) return message(503, "AI 분석을 사용할 수 없습니다. 서버의 AI 설정을 확인해 주세요.");
