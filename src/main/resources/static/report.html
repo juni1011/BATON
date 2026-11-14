@@ -9,7 +9,7 @@
     <meta name="theme-color" content="#9B3F3F">
     <script src="/js/common.js" defer></script>
     <script src="/js/ui.js?v=first-step-nav" defer></script>
-    <script src="/js/report.js" defer></script>
+    <script src="/js/report.js?v=law-gaps" defer></script>
 </head>
 <body>
     <header class="site-header">
@@ -47,6 +47,11 @@
             <section class="card review-guide" id="before-signing" aria-labelledby="before-signing-title" hidden>
                 <h2 id="before-signing-title">서명 전 먼저 물어볼 것</h2>
                 <ol id="priority-questions"></ol>
+            </section>
+            <section class="card review-guide" id="law-gaps" aria-labelledby="law-gaps-title" hidden>
+                <h2 id="law-gaps-title">법 조항별로 부족한 부분</h2>
+                <ul id="law-gap-list"></ul>
+                <p class="muted small">규칙으로 확인한 정보 제공용 결과이며 법률 자문이 아닙니다.</p>
             </section>
             <div class="stats" id="stats"></div>
             <p class="muted small" id="pay-note"></p>

@@ -32,6 +32,19 @@ document.addEventListener("DOMContentLoaded", async () => {
         document.getElementById("subtitle").textContent = `${contract.employerName} 계약서에서 확인이 필요한 부분을 정리했습니다.`;
     }
 
+    const gaps = new Map();
+    for (const item of issues) {
+        if (!item.legalBasis) continue;
+        if (!gaps.has(item.legalBasis)) gaps.set(item.legalBasis, []);
+        gaps.get(item.legalBasis).push(item);
+    }
+    if (gaps.size) {
+        document.getElementById("law-gap-list").append(...[...gaps].map(([law, list]) =>
+            h("li", {}, h("strong", { text: law }),
+                h("p", { text: list.map(item => `${item.title}(${LEVEL_LABELS[item.level] || item.level})`).join(" · ") + " — 이 조항 기준으로 부족하거나 확인이 필요합니다." }))));
+        document.getElementById("law-gaps").hidden = false;
+    }
+
     document.getElementById("stats").append(
         ...[["DANGER", report.dangerCount], ["WARNING", report.warningCount], ["MISSING", report.missingCount]]
             .map(([level, count]) => h("div", { class: "stat " + level }, h("b", { text: `${count ?? 0}건` }), LEVEL_LABELS[level])),
@@ -48,7 +61,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         h("div", { class: "row" }, h("span", { class: "badge " + item.level, text: LEVEL_LABELS[item.level] || item.level }), h("h3", { text: item.title })),
         item.originalText && h("blockquote", { text: item.originalText }),
         h("p", { text: item.reason, style: "margin-bottom:0" }),
-        item.legalBasis && h("p", { class: "muted small", text: "근거: " + item.legalBasis, style: "margin:4px 0 0" }),
+        item.legalBasis && h("p", { class: "muted small", text: (item.level === "OK" ? "근거: " : "부족한 법 조항: ") + item.legalBasis, style: "margin:4px 0 0" }),
         item.questionForEmployer && h("div", { class: "question" }, h("strong", { text: "이렇게 물어보세요  " }), item.questionForEmployer));
     list.append(...issues.map(card));
 
