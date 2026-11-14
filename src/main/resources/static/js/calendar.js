@@ -96,9 +96,20 @@ document.addEventListener("DOMContentLoaded", () => {
                 "aria-label": `${event.title} 삭제`, onclick: () => remove(event.id) }, "삭제"))));
     }
 
+    /** 저장 결과를 알린다. 로그인 중이면 계정에 저장됐는지, 실패했는지도 알려 준다. */
+    function report(saved, done) {
+        saved.then(result => {
+            if (result === "failed") {
+                notify(message, "계정에 저장하지 못했어요. 이 브라우저에는 저장했고, 다음에 다시 시도할게요.", "error");
+            } else if (done) {
+                notify(message, result === "server" ? done.replace("저장했어요", "계정에 저장했어요") : done);
+            }
+        });
+    }
+
     function remove(id) {
         events = events.filter(event => event.id !== id);
-        Easyton.saveCalendarEvents(events);
+        report(Easyton.saveCalendarEvents(events), "");
         renderAll();
     }
 
@@ -179,8 +190,7 @@ document.addEventListener("DOMContentLoaded", () => {
             title, type, date, startTime: start, endTime: end,
             description: field("description").value.trim() || null, sourceLink: "/calendar.html"
         });
-        Easyton.saveCalendarEvents(events);
-        notify(message, "일정을 저장했어요.");
+        report(Easyton.saveCalendarEvents(events), "일정을 저장했어요.");
         if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
             messageAnimation = message.animate([
                 { opacity: 0, offset: 0, easing: "ease-out" },
