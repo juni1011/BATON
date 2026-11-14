@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="230" height="48" viewBox="0 0 230 48" role="img" aria-labelledby="b2-logo-title">
-  <title id="b2-logo-title">알바 첫걸음</title>
+  <title id="b2-logo-title">첫걸음</title>
   <g transform="translate(0 1) scale(.177)">
     <g fill="#C69A33">
       <path d="M 0 236 C 35 178 65 152 121 152 H 157 L 146 171 H 121 C 84 171 61 184 37 218 H 76 L 64 236 Z"/>
@@ -12,5 +12,5 @@
       <circle cx="308" cy="29" r="28"/>
     </g>
   </g>
-  <text x="84" y="34" fill="#9B3F3F" font-family="Apple SD Gothic Neo, Malgun Gothic, Noto Sans KR, system-ui, sans-serif" font-size="27" font-weight="800" letter-spacing="-1">알바 첫걸음</text>
+  <text x="84" y="34" fill="#9B3F3F" font-family="Apple SD Gothic Neo, Malgun Gothic, Noto Sans KR, system-ui, sans-serif" font-size="27" font-weight="800" letter-spacing="-1">첫걸음</text>
 </svg>
