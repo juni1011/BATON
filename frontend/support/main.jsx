@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { AgeIllustration, StatusIllustration, HousingIllustration, IncomeIllustration } from './visuals.jsx';
 import { REGIONS, getDistricts, RegionMap } from './RegionMap.jsx';
 import { districtAtLocation } from './korea-regions.js';
+import { RunnerJourney, RunnerMark } from './RunnerJourney.jsx';
 
 const FIELDS = ['sido', 'sigungu', 'status', 'housing', 'householdIncomeLevel'];
 const STATUS = ['대학생', '구직자', '재직자', '기타'];
@@ -11,6 +12,7 @@ const INCOME = ['중위소득 50% 이하', '중위소득 100% 이하', '중위�
 const EMPTY = { age: '', sido: '', sigungu: '', status: '', housing: '', householdIncomeLevel: '' };
 const FIELD_ORDER = Object.keys(EMPTY);
 const STEP_FIELDS = [['age'], ['sido', 'sigungu'], ['status'], ['housing'], ['householdIncomeLevel']];
+const STEP_LABELS = ['만 나이', '거주 지역', '현재 상태', '거주 형태', '가구 소득', '첫걸음'];
 const isFilled = (key, value) => key === 'age'
     ? value !== '' && Number.isInteger(Number(value)) && Number(value) >= 0 && Number(value) <= 120
     : Boolean(value?.trim());
@@ -24,6 +26,12 @@ const stageFor = age => {
     if (age === '' || !Number.isInteger(value) || value < 0 || value > 120) return null;
     return value < 19 ? 'minor' : value < 35 ? 'youth' : value < 65 ? 'middle' : 'senior';
 };
+const stepForField = key => key === 'submit' ? 5 : STEP_FIELDS.findIndex(fields => fields.includes(key));
+function nextEmptyField(key, profile) {
+    const index = FIELD_ORDER.indexOf(key);
+    const remaining = [...FIELD_ORDER.slice(index + 1), ...FIELD_ORDER.slice(0, index)];
+    return remaining.find(field => !isFilled(field, profile[field])) || 'submit';
+}
 
 function loadProfile() {
     try {
@@ -44,8 +52,9 @@ function storedDeadlines() {
     try { return new Set(array(window.Easyton.getCalendarEvents()).map(event => event.id)); } catch { return new Set(); }
 }
 
-function Step({ number, title, description, visual, caption, detail, children, isMap = false }) {
-    return <section className={`support-step${isMap ? ' support-step--map' : ''}`} aria-labelledby={`step-${number}`}>
+function Step({ number, title, description, visual, caption, detail, children, isMap = false, active }) {
+    return <section className={`support-step${isMap ? ' support-step--map' : ''}`} aria-labelledby={`step-${number}`}
+        aria-hidden={!active} inert={!active}>
         <div className="support-visual-panel">
             <div className="support-visual-art">{visual}</div>
             <div className="support-visual-caption" aria-live="polite" aria-atomic="true">
@@ -80,6 +89,13 @@ function SupportApp() {
     const [added, setAdded] = useState(storedDeadlines);
     const [message, setMessage] = useState('');
     const [busy, setBusy] = useState(false);
+    const [activeStep, setActiveStep] = useState(0);
+    const [focusVersion, setFocusVersion] = useState(0);
+    const [runActive, setRunActive] = useState(false);
+    const [recommendationReady, setRecommendationReady] = useState(false);
+    const [runnerOrigin, setRunnerOrigin] = useState(null);
+    const [resultsVisible, setResultsVisible] = useState(false);
+    const [resultVersion, setResultVersion] = useState(0);
     const [showNationalMap, setShowNationalMap] = useState(false);
     const [mapPreview, setMapPreview] = useState(null);
     const [locationMessage, setLocationMessage] = useState('');
@@ -91,10 +107,25 @@ function SupportApp() {
     const profileRef = useRef(profile);
     const advanceTimer = useRef(null);
     const regionFocusFrame = useRef(null);
+    const activeStepRef = useRef(0);
+    const pendingFocus = useRef(null);
+    const deckShellRef = useRef(null);
+    const runOverlayRef = useRef(null);
+    const runnerComplete = useRef(null);
+    const requestVersion = useRef(0);
+    const mounted = useRef(true);
     const stage = stageFor(profile.age);
     const districts = getDistricts(profile.sido);
     const regionKnown = REGIONS.some(region => region.name === profile.sido || region.aliases?.includes(profile.sido));
     const filled = STEP_FIELDS.filter(fields => fields.every(key => isFilled(key, profile[key]))).length;
+    const journeySteps = [
+        { label: '만 나이', value: profile.age === '' ? '미입력' : `만 ${profile.age}세` },
+        { label: '거주 지역', value: [profile.sido, profile.sigungu].filter(Boolean).join(' · ') || '미입력' },
+        { label: '현재 상태', value: profile.status || '미입력' },
+        { label: '거주 형태', value: profile.housing || '미입력' },
+        { label: '가구 소득', value: profile.householdIncomeLevel || '미입력' },
+        { label: '첫걸음', value: '나에게 맞는 지원사업' }
+    ];
 
     function cancelAdvance() {
         clearTimeout(advanceTimer.current);
@@ -103,25 +134,69 @@ function SupportApp() {
         regionFocusFrame.current = null;
     }
 
+    function goToStep(index, { focusId, automatic = false } = {}) {
+        if (submitting.current) return;
+        cancelAdvance();
+        const next = Math.max(0, Math.min(STEP_LABELS.length - 1, index));
+        if (activeStepRef.current === 1 && next !== 1) {
+            locationRequest.current++;
+            setLocating(false);
+        }
+        activeStepRef.current = next;
+        pendingFocus.current = { id: focusId || STEP_FIELDS[next]?.[0] || 'submit', automatic };
+        setActiveStep(next);
+        setFocusVersion(version => version + 1);
+    }
+
+    useEffect(() => {
+        if (!pendingFocus.current || runActive) return;
+        const request = pendingFocus.current;
+        pendingFocus.current = null;
+        regionFocusFrame.current = requestAnimationFrame(() => {
+            regionFocusFrame.current = null;
+            const target = document.getElementById(request.id);
+            if (!target || target.disabled || target.closest('[inert]')) return;
+            target.focus({ preventScroll: true });
+            const shell = deckShellRef.current;
+            if (!shell) return;
+            const header = document.querySelector('.site-header')?.getBoundingClientRect().height || 0;
+            const shellRect = shell.getBoundingClientRect();
+            const targetRect = target.getBoundingClientRect();
+            const top = Math.max(0, window.scrollY + shellRect.top - header - 20,
+                window.scrollY + targetRect.bottom - window.innerHeight + 24);
+            window.scrollTo({ top, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+        });
+        return () => cancelAnimationFrame(regionFocusFrame.current);
+    }, [activeStep, focusVersion, runActive]);
+
+    useEffect(() => {
+        if (!runActive) return;
+        const frame = requestAnimationFrame(() => {
+            runOverlayRef.current?.focus({ preventScroll: true });
+            const shell = deckShellRef.current;
+            if (!shell) return;
+            const header = document.querySelector('.site-header')?.getBoundingClientRect().height || 0;
+            window.scrollTo({ top: Math.max(0, window.scrollY + shell.getBoundingClientRect().top - header - 16),
+                behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+        });
+        return () => cancelAnimationFrame(frame);
+    }, [runActive]);
+
+    function handleDeckKey(event) {
+        if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+        if (event.target.closest('input, select, textarea, svg, [contenteditable="true"]')) return;
+        if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+        event.preventDefault();
+        goToStep(activeStepRef.current + (event.key === 'ArrowRight' ? 1 : -1));
+    }
+
     function advanceFrom(key, next, delay = 450) {
         cancelAdvance();
         if (!isFilled(key, next[key])) return;
         advanceTimer.current = setTimeout(() => {
             advanceTimer.current = null;
-            const index = FIELD_ORDER.indexOf(key);
-            const remaining = [...FIELD_ORDER.slice(index + 1), ...FIELD_ORDER.slice(0, index)];
-            const targetKey = remaining.find(field => !isFilled(field, profileRef.current[field]));
-            const target = document.getElementById(targetKey || 'submit');
-            if (!target || target.disabled) return;
-            const section = target.closest('.support-step, .support-submit-panel');
-            if (!section) return;
-            const header = document.querySelector('.site-header')?.getBoundingClientRect().height || 0;
-            target.focus({ preventScroll: true });
-            window.scrollTo({
-                top: Math.max(0, window.scrollY + section.getBoundingClientRect().top - header - 20,
-                    window.scrollY + target.getBoundingClientRect().bottom - window.innerHeight + 24),
-                behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'
-            });
+            const targetKey = nextEmptyField(key, profileRef.current);
+            goToStep(stepForField(targetKey), { focusId: targetKey, automatic: true });
         }, delay);
     }
 
@@ -142,7 +217,7 @@ function SupportApp() {
         setLocating(false);
         setLocationMessage('');
         setShowNationalMap(false);
-        update('sigungu', value);
+        update('sigungu', value, { advance: true });
     }
 
     function findCurrentLocation() {
@@ -170,6 +245,7 @@ function SupportApp() {
             setMessage('');
             setShowNationalMap(false);
             setLocationMessage('현재 위치 주변을 선택했어요. 실제 거주지와 다르면 바꿔 주세요.');
+            advanceFrom('sigungu', next, 900);
         }, () => {
             if (request !== locationRequest.current) return;
             setLocating(false);
@@ -185,26 +261,21 @@ function SupportApp() {
         setShowNationalMap(false);
         update('sido', value);
         if (!value) return;
-        regionFocusFrame.current = requestAnimationFrame(() => {
-            regionFocusFrame.current = null;
-            const target = document.getElementById('sigungu');
-            if (!target || target.disabled) return;
-            target.focus({ preventScroll: true });
-            const rect = target.getBoundingClientRect();
-            const header = document.querySelector('.site-header')?.getBoundingClientRect().height || 0;
-            const offset = rect.bottom > window.innerHeight - 24 ? rect.bottom - window.innerHeight + 24
-                : rect.top < header + 20 ? rect.top - header - 20 : 0;
-            if (offset) window.scrollBy({ top: offset,
-                behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
-        });
+        goToStep(1, { focusId: 'sigungu', automatic: true });
     }
 
     useEffect(() => {
+        mounted.current = true;
         const cancelOnEscape = event => { if (event.key === 'Escape') cancelAdvance(); };
         window.addEventListener('wheel', cancelAdvance, { passive: true });
         window.addEventListener('touchstart', cancelAdvance, { passive: true });
         window.addEventListener('keydown', cancelOnEscape);
         return () => {
+            mounted.current = false;
+            requestVersion.current++;
+            locationRequest.current++;
+            runnerComplete.current?.();
+            runnerComplete.current = null;
             cancelAdvance();
             window.removeEventListener('wheel', cancelAdvance);
             window.removeEventListener('touchstart', cancelAdvance);
@@ -222,26 +293,50 @@ function SupportApp() {
         event.preventDefault();
         cancelAdvance();
         if (submitting.current) return;
+        if (activeStepRef.current !== 5) {
+            const key = STEP_FIELDS[activeStepRef.current].at(-1);
+            const nextKey = nextEmptyField(key, profileRef.current);
+            goToStep(stepForField(nextKey), { focusId: nextKey });
+            return;
+        }
         const age = profile.age === '' ? null : Number(profile.age);
         if (age !== null && (!Number.isInteger(age) || age < 0 || age > 120)) {
             setMessage('만 나이는 0세부터 120세까지 정수로 입력해 주세요.');
-            ageRef.current?.focus();
+            goToStep(0, { focusId: 'age' });
             return;
         }
         const next = { age };
         for (const key of FIELDS) next[key] = profile[key].trim() || null;
+        const shellRect = deckShellRef.current?.getBoundingClientRect();
+        const markRect = document.querySelector('[data-runner-origin]')?.getBoundingClientRect();
+        setRunnerOrigin(shellRect && markRect ? { x: (markRect.left + markRect.width / 2 - shellRect.left) / shellRect.width,
+            y: (markRect.top + markRect.height / 2 - shellRect.top) / shellRect.height } : null);
+        const version = ++requestVersion.current;
+        const previousResultsVisible = resultsVisible;
         submitting.current = true;
         setBusy(true);
         setMessage('');
+        setResultsVisible(false);
+        setRecommendationReady(false);
+        const motion = new Promise(resolve => { runnerComplete.current = resolve; });
+        setRunActive(true);
         try {
             window.Easyton.saveUserProfile(next);
-            const response = await window.Easyton.postJson('/api/supports/match', { profile: next });
-            if (!Array.isArray(response)) throw new Error('Invalid response');
+            const request = window.Easyton.postJson('/api/supports/match', { profile: next }).then(response => {
+                if (!Array.isArray(response)) throw new Error('Invalid response');
+                if (mounted.current && version === requestVersion.current) setRecommendationReady(true);
+                return response;
+            });
+            const [response] = await Promise.all([request, motion]);
+            if (!mounted.current || version !== requestVersion.current) return;
             window.Easyton.saveSupportMatches(response);
             setMatches(response);
+            setResultVersion(current => current + 1);
+            setResultsVisible(true);
             requestAnimationFrame(() => {
                 const results = resultsRef.current;
                 if (!results) return;
+                document.getElementById('results-title')?.focus({ preventScroll: true });
                 const header = document.querySelector('.site-header')?.getBoundingClientRect().height || 0;
                 window.scrollTo({
                     top: Math.max(0, window.scrollY + results.getBoundingClientRect().top - header - 20),
@@ -249,10 +344,20 @@ function SupportApp() {
                 });
             });
         } catch (error) {
-            setMessage(window.EasytonUI.errorText(error));
+            if (mounted.current && version === requestVersion.current) {
+                setMessage(window.EasytonUI.errorText(error));
+                setResultsVisible(previousResultsVisible);
+                pendingFocus.current = { id: 'submit' };
+                setFocusVersion(current => current + 1);
+            }
         } finally {
-            submitting.current = false;
-            setBusy(false);
+            runnerComplete.current?.();
+            runnerComplete.current = null;
+            if (mounted.current && version === requestVersion.current) {
+                submitting.current = false;
+                setRunActive(false);
+                setBusy(false);
+            }
         }
     }
 
@@ -274,8 +379,12 @@ function SupportApp() {
                 <p className="support-flow-hint">선택을 마치면 다음 빈 항목으로 부드럽게 이동해요.</p></div>
             <div className="support-progress"><span className="support-progress-dot" />입력한 항목 <strong>{filled}<span> / {STEP_FIELDS.length}</span></strong></div>
         </div>
-        <form id="profile-form" className="support-form" onSubmit={recommend} onFocusCapture={cancelAdvance} onPointerDownCapture={cancelAdvance} aria-busy={busy}>
-            <Step number={1} title="만 나이" description="지금의 나이를 알려주세요. 위·아래 화살표로도 바꿀 수 있어요."
+        <form id="profile-form" className={`support-form support-journey${runActive ? ' is-running' : ''}`} noValidate
+            onSubmit={recommend} onFocusCapture={cancelAdvance} onPointerDownCapture={cancelAdvance} aria-busy={busy}>
+            <div className="support-deck-shell" ref={deckShellRef}>
+            <div className="support-deck" inert={runActive} onKeyDown={handleDeckKey} aria-label="지원사업 추천 입력 카드">
+            <div className="support-deck-track" style={{ '--active-slide': activeStep }}>
+            <Step number={1} active={activeStep === 0} title="만 나이" description="지금의 나이를 알려주세요. 위·아래 화살표로도 바꿀 수 있어요."
                 visual={<div className="visual-swap" key={stage || 'empty'}><AgeIllustration stage={stage} /></div>}
                 caption={stage ? AGE_STAGES[stage][0] : '당신의 첫걸음은 어디쯤인가요?'} detail={stage ? AGE_STAGES[stage][1] : '나이에 맞춰 그림이 바뀌어요'}>
                 <label htmlFor="age">만 나이</label>
@@ -290,7 +399,7 @@ function SupportApp() {
                 </div>
                 <p className="support-input-hint" id="age-hint">0~120세 · 입력 후 잠시 기다리거나 Enter를 누르면 다음 빈 항목으로 이동해요.</p>
             </Step>
-            <Step number={2} title="거주 지역" description="현재 위치를 찾거나 시·도와 시·군·구를 직접 골라 주세요." isMap
+            <Step number={2} active={activeStep === 1} title="거주 지역" description="현재 위치를 찾거나 시·도와 시·군·구를 직접 골라 주세요." isMap
                 visual={<div className="support-region-map">
                     {regionKnown && <button type="button" className="btn small support-map-back" onClick={() => {
                         cancelAdvance(); setMapPreview(null); setShowNationalMap(current => !current);
@@ -311,17 +420,17 @@ function SupportApp() {
                 </div>
                 {regionKnown && <p className="support-input-hint">지역을 선택하면 지도에서 위치를 확인할 수 있어요.</p>}
             </Step>
-            <Step number={3} title="현재 상태" description="요즘 어떤 하루를 보내고 계신가요? 현재 상황과 가장 가까운 항목을 골라주세요."
+            <Step number={3} active={activeStep === 2} title="현재 상태" description="요즘 어떤 하루를 보내고 계신가요? 현재 상황과 가장 가까운 항목을 골라주세요."
                 visual={<div className="visual-swap" key={profile.status}><StatusIllustration value={profile.status} /></div>}
                 caption={profile.status || '지금의 나를 알려주세요'} detail="나의 상황에 맞는 지원을 찾아요">
                 <SelectField id="status" label="현재 상태" value={profile.status} options={STATUS} onChange={value => select('status', value)} />
             </Step>
-            <Step number={4} title="거주 형태" description="지금 머무는 공간은 어떤 곳인가요? 내 생활에 가까운 항목을 선택해 주세요."
+            <Step number={4} active={activeStep === 3} title="거주 형태" description="지금 머무는 공간은 어떤 곳인가요? 내 생활에 가까운 항목을 선택해 주세요."
                 visual={<div className="visual-swap" key={profile.housing}><HousingIllustration value={profile.housing} /></div>}
                 caption={profile.housing || '나의 일상을 담은 공간'} detail="주거 조건에 맞는 기회를 살펴봐요">
                 <SelectField id="housing" label="거주 형태" value={profile.housing} options={HOUSING} onChange={value => select('housing', value)} />
             </Step>
-            <Step number={5} title="가구 소득" description="가구 소득 구간을 알고 있다면 선택해 주세요. 잘 모르겠다면 ‘미확인’을 선택해도 괜찮아요."
+            <Step number={5} active={activeStep === 4} title="가구 소득" description="가구 소득 구간을 알고 있다면 선택해 주세요. 잘 모르겠다면 ‘미확인’을 선택해도 괜찮아요."
                 visual={<div className="visual-swap"><IncomeIllustration value={profile.householdIncomeLevel} /></div>}
                 caption={profile.householdIncomeLevel || '생활에 필요한 지원까지'} detail="선택한 소득 구간을 함께 살펴봐요">
                 <aside className="support-income-guide" aria-label="기준 중위소득 설명">
@@ -332,19 +441,38 @@ function SupportApp() {
                 </aside>
                 <SelectField id="householdIncomeLevel" label="가구 소득" value={profile.householdIncomeLevel} options={INCOME} onChange={value => select('householdIncomeLevel', value)} />
             </Step>
-            <div className="support-submit-panel">
-                <div><strong>나에게 맞는 지원사업, 만나볼까요?</strong><p>입력한 조건으로 추천 결과를 확인하세요.</p></div>
-                <button type="submit" className="btn primary" id="submit" disabled={busy}>{busy ? '추천 찾는 중…' : '추천 받기'}<span aria-hidden="true">→</span></button>
+            <section className="support-step support-submit-panel support-finish-step" aria-labelledby="step-6" aria-hidden={activeStep !== 5} inert={activeStep !== 5}>
+                <div className="support-ready-copy"><span className="support-step-number">06 <span>/ START</span></span>
+                    <h2 id="step-6">나에게 맞는 지원사업, 만나볼까요?</h2><p>입력한 조건으로 추천 결과를 확인하세요.</p>
+                    <dl className="support-review-summary">{journeySteps.slice(0, 5).map(step => <div key={step.label}><dt>{step.label}</dt><dd>{step.value}</dd></div>)}</dl>
+                </div>
+                <button type="submit" className="btn primary support-start-button" id="submit" disabled={busy}>
+                    <span>{busy ? '첫걸음 준비 중…' : '첫 걸음 시작'}</span><span data-runner-origin="true" aria-hidden="true"><RunnerMark /></span>
+                </button>
+            </section>
             </div>
+            </div>
+            {runActive && <div className="support-run-overlay" ref={runOverlayRef} tabIndex={-1} role="region" aria-label="첫걸음 달리기">
+                <RunnerJourney steps={journeySteps.slice(0, 5)} origin={runnerOrigin} ready={recommendationReady} onComplete={() => runnerComplete.current?.()} />
+            </div>}
+            </div>
+            <nav className="support-deck-navigation" aria-label="입력 단계 이동" onKeyDown={handleDeckKey}>
+                <button type="button" className="btn support-deck-previous" disabled={busy || activeStep === 0} onClick={() => goToStep(activeStep - 1)}>← 이전</button>
+                <div className="support-step-tabs">{STEP_LABELS.map((label, index) => <button type="button" key={label}
+                    className={`support-step-tab${activeStep === index ? ' is-current' : ''}${index < 5 && STEP_FIELDS[index].every(key => isFilled(key, profile[key])) ? ' is-complete' : ''}`}
+                    aria-current={activeStep === index ? 'step' : undefined} aria-label={`${index + 1}단계 ${label}`} disabled={busy}
+                    onClick={() => goToStep(index)}><span aria-hidden="true">{String(index + 1).padStart(2, '0')}</span><span>{label}</span></button>)}</div>
+                <button type="button" className="btn support-deck-next" disabled={busy || activeStep === 5} onClick={() => goToStep(activeStep + 1)}>다음 →</button>
+            </nav>
         </form>
         <div id="message" className="notice error support-message" role="alert" hidden={!message}>{message}</div>
-        <section id="results" className="support-results" ref={resultsRef} aria-live="polite" aria-label="지원사업 추천 결과">
-            {matches.length > 0 && <><div className="support-results-heading"><h2 id="results-title">추천 결과 <span>{matches.length}건</span></h2><p id="source-notice">{sampleResults ? '예시 데이터' : '온통청년 청년정책 정보 · 최대 50건'}</p>
+        <section id="results" className={`support-results${resultsVisible ? ' is-revealed' : ''}`} ref={resultsRef} hidden={!resultsVisible} aria-live="polite" aria-label="지원사업 추천 결과">
+            {matches.length > 0 && <><div className="support-results-heading"><h2 id="results-title" tabIndex={-1}>추천 결과 <span>{matches.length}건</span></h2><p id="source-notice">{sampleResults ? '예시 데이터' : '온통청년 청년정책 정보 · 최대 50건'}</p>
                 {!sampleResults && <p>소득·신분·거주지 등 세부 자격은 상세 공고에서 확인해 주세요.</p>}</div>
-                <div className="support-result-grid">{matches.map(match => {
+                <div className="support-result-grid" key={resultVersion}>{matches.map((match, index) => {
                     const isAdded = added.has('support-' + match.id);
                     const url = /^https?:\/\//i.test(match.applyUrl || '') ? match.applyUrl : null;
-                    return <article className="card stack" key={match.id}>
+                    return <article className="card stack" key={match.id} style={{ '--result-index': Math.min(index, 8) }}>
                         <span className={'badge ' + match.verdict}>{window.EasytonUI.VERDICT_LABELS[match.verdict] || match.verdict}</span>
                         <h3>{match.name}</h3><p>{match.reason}</p>
                         <dl className="meta"><dt>기관</dt><dd>{match.organization || '-'}</dd>
@@ -356,6 +484,8 @@ function SupportApp() {
                         </div>}
                     </article>;
                 })}</div></>}
+            {matches.length === 0 && <div className="support-results-heading"><h2 id="results-title" tabIndex={-1}>추천 결과 <span>0건</span></h2>
+                <p>선택한 조건에 맞는 지원사업이 없습니다. 입력한 조건을 바꿔 다시 첫걸음을 시작해 보세요.</p></div>}
         </section>
     </>;
 }
